@@ -18,6 +18,7 @@ import {
   Copy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCreateChatbot } from "@/hooks/useChatbots";
 
 const tones = [
   { id: "professional", label: "Professional", description: "Formal and business-focused" },
@@ -26,7 +27,7 @@ const tones = [
 ];
 
 const goals = [
-  { id: "leads", label: "Lead Generation", description: "Capture emails and contact info", icon: Users },
+  { id: "lead_generation", label: "Lead Generation", description: "Capture emails and contact info", icon: Users },
   { id: "sales", label: "Drive Sales", description: "Convert visitors to customers", icon: Target },
   { id: "support", label: "Customer Support", description: "Answer questions and help users", icon: HeadphonesIcon },
 ];
@@ -36,18 +37,19 @@ const CreateChatbot = () => {
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [tone, setTone] = useState("friendly");
-  const [goal, setGoal] = useState("leads");
+  const [goal, setGoal] = useState("lead_generation");
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [botId, setBotId] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const createChatbot = useCreateChatbot();
 
   const handleCrawl = async () => {
     if (!url) return;
     setIsProcessing(true);
     
-    // Simulate crawling progress
+    // Simulate crawling progress (real crawling would happen here)
     const progressSteps = [10, 25, 40, 60, 75, 90, 100];
     for (const p of progressSteps) {
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -65,18 +67,31 @@ const CreateChatbot = () => {
   const handleCreate = async () => {
     setIsProcessing(true);
     
-    // Simulate creation
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    const generatedId = Math.random().toString(36).substring(2, 10);
-    setBotId(generatedId);
-    setIsProcessing(false);
-    setStep(4);
-    
-    toast({
-      title: "Chatbot created! 🎉",
-      description: "Your AI chatbot is ready to go live.",
-    });
+    try {
+      const chatbot = await createChatbot.mutateAsync({
+        name,
+        website_url: url,
+        tone,
+        goal,
+      });
+      
+      setBotId(chatbot.id);
+      setStep(4);
+      
+      toast({
+        title: "Chatbot created! 🎉",
+        description: "Your AI chatbot is ready to go live.",
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create chatbot";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const copyEmbedCode = () => {

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,46 +12,37 @@ import {
   ExternalLink,
   Copy,
   MoreVertical,
-  TrendingUp
+  TrendingUp,
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useChatbots, useDeleteChatbot } from "@/hooks/useChatbots";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// Mock data for demonstration
-const mockChatbots = [
-  {
-    id: "1",
-    name: "Main Website Bot",
-    url: "https://example.com",
-    status: "active",
-    totalChats: 1247,
-    leadsCaptures: 89,
-    conversionRate: 7.1,
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Support Bot",
-    url: "https://help.example.com",
-    status: "active",
-    totalChats: 523,
-    leadsCaptures: 34,
-    conversionRate: 6.5,
-    createdAt: "2024-02-01",
-  },
-];
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
-  const [chatbots] = useState(mockChatbots);
   const { toast } = useToast();
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const { data: chatbots = [], isLoading } = useChatbots();
+  const deleteChatbot = useDeleteChatbot();
 
   const handleLogout = async () => {
     await signOut();
@@ -68,11 +58,34 @@ const Dashboard = () => {
     });
   };
 
+  const handleDelete = async (botId: string) => {
+    try {
+      await deleteChatbot.mutateAsync(botId);
+      toast({
+        title: "Deleted",
+        description: "Chatbot has been deleted",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to delete chatbot",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Calculate totals from real data
+  const totalChats = chatbots.reduce((sum, bot) => sum + bot.total_chats, 0);
+  const totalLeads = chatbots.reduce((sum, bot) => sum + bot.leads_captured, 0);
+  const avgConversion = chatbots.length > 0 
+    ? chatbots.reduce((sum, bot) => sum + bot.conversion_rate, 0) / chatbots.length 
+    : 0;
+
   const stats = [
-    { label: "Total Chatbots", value: chatbots.length, icon: MessageSquare, change: "+2 this month" },
-    { label: "Total Chats", value: "1,770", icon: MessageCircle, change: "+12.5% vs last month" },
-    { label: "Leads Captured", value: "123", icon: Users, change: "+23% vs last month" },
-    { label: "Avg. Conversion", value: "6.8%", icon: TrendingUp, change: "+0.5% vs last month" },
+    { label: "Total Chatbots", value: chatbots.length, icon: MessageSquare },
+    { label: "Total Chats", value: totalChats.toLocaleString(), icon: MessageCircle },
+    { label: "Leads Captured", value: totalLeads.toLocaleString(), icon: Users },
+    { label: "Avg. Conversion", value: `${avgConversion.toFixed(1)}%`, icon: TrendingUp },
   ];
 
   return (
@@ -164,7 +177,6 @@ const Dashboard = () => {
               </div>
               <p className="text-3xl font-display font-bold mb-1">{stat.value}</p>
               <p className="text-muted-foreground text-sm">{stat.label}</p>
-              <p className="text-xs text-green-500 mt-2">{stat.change}</p>
             </motion.div>
           ))}
         </div>
@@ -175,7 +187,12 @@ const Dashboard = () => {
             <h2 className="font-display text-xl font-semibold">Your Chatbots</h2>
           </div>
 
-          {chatbots.length === 0 ? (
+          {isLoading ? (
+            <div className="p-12 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+              <p className="text-muted-foreground mt-4">Loading chatbots...</p>
+            </div>
+          ) : chatbots.length === 0 ? (
             <div className="p-12 text-center">
               <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-8 h-8 text-muted-foreground" />
@@ -208,12 +225,12 @@ const Dashboard = () => {
                         <div>
                           <h3 className="font-semibold">{bot.name}</h3>
                           <a
-                            href={bot.url}
+                            href={bot.website_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
                           >
-                            {bot.url}
+                            {bot.website_url}
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         </div>
@@ -223,15 +240,15 @@ const Dashboard = () => {
                     {/* Stats */}
                     <div className="flex items-center gap-8">
                       <div className="text-center">
-                        <p className="font-semibold">{bot.totalChats.toLocaleString()}</p>
+                        <p className="font-semibold">{bot.total_chats.toLocaleString()}</p>
                         <p className="text-xs text-muted-foreground">Chats</p>
                       </div>
                       <div className="text-center">
-                        <p className="font-semibold">{bot.leadsCaptures}</p>
+                        <p className="font-semibold">{bot.leads_captured}</p>
                         <p className="text-xs text-muted-foreground">Leads</p>
                       </div>
                       <div className="text-center">
-                        <p className="font-semibold text-green-500">{bot.conversionRate}%</p>
+                        <p className="font-semibold text-green-500">{bot.conversion_rate}%</p>
                         <p className="text-xs text-muted-foreground">Conversion</p>
                       </div>
                     </div>
@@ -256,7 +273,34 @@ const Dashboard = () => {
                           <DropdownMenuItem>Edit Settings</DropdownMenuItem>
                           <DropdownMenuItem>View Analytics</DropdownMenuItem>
                           <DropdownMenuItem>Chat History</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem 
+                                onSelect={(e) => e.preventDefault()}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete chatbot?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete "{bot.name}" and all its data including conversations and leads.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(bot.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
