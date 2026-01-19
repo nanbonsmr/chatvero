@@ -94,9 +94,12 @@ const CreateChatbot = () => {
     }
   };
 
+  const getEmbedCode = () => {
+    return `<script src="https://czhltxnpaukjqmtgrgzc.supabase.co/functions/v1/widget?bot=${botId}"></script>`;
+  };
+
   const copyEmbedCode = () => {
-    const code = `<script src="https://embedai.dev/widget.js" data-bot-id="${botId}"></script>`;
-    navigator.clipboard.writeText(code);
+    navigator.clipboard.writeText(getEmbedCode());
     toast({
       title: "Copied!",
       description: "Embed code copied to clipboard",
@@ -377,7 +380,7 @@ const CreateChatbot = () => {
                 <div>
                   <Label className="mb-2 block">Embed Code</Label>
                   <div className="bg-secondary rounded-xl p-4 font-mono text-sm break-all">
-                    {`<script src="https://embedai.dev/widget.js" data-bot-id="${botId}"></script>`}
+                    {getEmbedCode()}
                   </div>
                 </div>
 
