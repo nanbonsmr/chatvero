@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, subDays, isAfter } from "date-fns";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useConversations, useConversationMessages } from "@/hooks/useConversations";
 import { useChatbots } from "@/hooks/useChatbots";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -23,12 +24,33 @@ import {
   Globe,
   Loader2,
   X,
+  ArrowUpDown,
+  Tag,
 } from "lucide-react";
+
+const CATEGORIES = [
+  { value: "all", label: "All Categories" },
+  { value: "general", label: "General" },
+  { value: "support", label: "Support" },
+  { value: "sales", label: "Sales" },
+  { value: "feedback", label: "Feedback" },
+];
+
+const TIME_FILTERS = [
+  { value: "all", label: "All Time" },
+  { value: "today", label: "Today" },
+  { value: "7days", label: "Last 7 Days" },
+  { value: "30days", label: "Last 30 Days" },
+  { value: "90days", label: "Last 90 Days" },
+];
 
 const Conversations = () => {
   const [selectedChatbot, setSelectedChatbot] = useState<string>("all");
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const { data: chatbots = [] } = useChatbots();
   const { data: conversations = [], isLoading } = useConversations(
@@ -36,15 +58,61 @@ const Conversations = () => {
   );
   const { data: messages = [], isLoading: messagesLoading } = useConversationMessages(selectedConversation);
 
-  const filteredConversations = conversations.filter((conv) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      conv.visitor_id.toLowerCase().includes(query) ||
-      conv.last_message?.toLowerCase().includes(query) ||
-      conv.page_url?.toLowerCase().includes(query)
-    );
-  });
+  const filteredConversations = useMemo(() => {
+    let filtered = conversations.filter((conv) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = 
+          conv.visitor_id.toLowerCase().includes(query) ||
+          conv.last_message?.toLowerCase().includes(query) ||
+          conv.page_url?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+
+      // Category filter
+      if (categoryFilter !== "all" && conv.category !== categoryFilter) {
+        return false;
+      }
+
+      // Time filter
+      if (timeFilter !== "all") {
+        const convDate = new Date(conv.started_at);
+        const now = new Date();
+        let cutoffDate: Date;
+        
+        switch (timeFilter) {
+          case "today":
+            cutoffDate = subDays(now, 1);
+            break;
+          case "7days":
+            cutoffDate = subDays(now, 7);
+            break;
+          case "30days":
+            cutoffDate = subDays(now, 30);
+            break;
+          case "90days":
+            cutoffDate = subDays(now, 90);
+            break;
+          default:
+            cutoffDate = new Date(0);
+        }
+        
+        if (!isAfter(convDate, cutoffDate)) return false;
+      }
+
+      return true;
+    });
+
+    // Sort
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.started_at).getTime();
+      const dateB = new Date(b.started_at).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
+    return filtered;
+  }, [conversations, searchQuery, categoryFilter, timeFilter, sortOrder]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
@@ -61,29 +129,68 @@ const Conversations = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search conversations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+        <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={selectedChatbot} onValueChange={setSelectedChatbot}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="All chatbots" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All chatbots</SelectItem>
+                {chatbots.map((bot) => (
+                  <SelectItem key={bot.id} value={bot.id}>
+                    {bot.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={selectedChatbot} onValueChange={setSelectedChatbot}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="All chatbots" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All chatbots</SelectItem>
-              {chatbots.map((bot) => (
-                <SelectItem key={bot.id} value={bot.id}>
-                  {bot.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-wrap gap-2">
+            <Select value={timeFilter} onValueChange={setTimeFilter}>
+              <SelectTrigger className="w-full sm:w-[140px]">
+                <Clock className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIME_FILTERS.map((filter) => (
+                  <SelectItem key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <Tag className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSortOrder(sortOrder === "newest" ? "oldest" : "newest")}
+              className="flex items-center gap-2"
+            >
+              <ArrowUpDown className="w-4 h-4" />
+              <span className="hidden sm:inline">{sortOrder === "newest" ? "Newest" : "Oldest"}</span>
+            </Button>
+          </div>
         </div>
 
         {/* Main Content - Stack on mobile, side-by-side on desktop */}
@@ -129,7 +236,12 @@ const Conversations = () => {
                             <p className="font-medium text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[150px]">
                               {conv.visitor_id.substring(0, 8)}...
                             </p>
-                            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{conv.chatbot_name}</p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{conv.chatbot_name}</p>
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                {conv.category}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
