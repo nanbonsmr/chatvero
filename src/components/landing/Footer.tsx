@@ -1,5 +1,6 @@
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { MessageSquare, Twitter, Github, Linkedin } from "lucide-react";
+import { MessageSquare, Twitter, Github, Linkedin, Sparkles } from "lucide-react";
 
 const footerLinks = {
   product: [
@@ -28,62 +29,90 @@ const footerLinks = {
   ],
 };
 
+const socialLinks = [
+  { icon: Twitter, href: "#", label: "Twitter" },
+  { icon: Github, href: "#", label: "GitHub" },
+  { icon: Linkedin, href: "#", label: "LinkedIn" },
+];
+
 export const Footer = () => {
   return (
-    <footer className="bg-card border-t border-border">
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
+    <footer className="relative bg-card/50 backdrop-blur-sm border-t border-border/50">
+      {/* Top gradient line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      
+      <div className="container mx-auto px-4 py-20">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-10 mb-16">
           {/* Brand Column */}
           <div className="col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
+            <Link to="/" className="flex items-center gap-2.5 mb-6 group">
+              <motion.div 
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                className="relative w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/20"
+              >
                 <MessageSquare className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-display font-bold text-xl">EmbedAI</span>
+                <motion.div 
+                  className="absolute -top-1 -right-1"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Sparkles className="w-3 h-3 text-accent" />
+                </motion.div>
+              </motion.div>
+              <span className="font-display font-bold text-xl tracking-tight">EmbedAI</span>
             </Link>
-            <p className="text-muted-foreground text-sm mb-6 max-w-xs">
+            <p className="text-muted-foreground text-sm mb-8 max-w-xs leading-relaxed">
               Turn your website into an AI-powered lead generation machine. No coding required.
             </p>
-            <div className="flex gap-4">
-              {[Twitter, Github, Linkedin].map((Icon, i) => (
-                <a
+            <div className="flex gap-3">
+              {socialLinks.map((social, i) => (
+                <motion.a
                   key={i}
-                  href="#"
-                  className="w-10 h-10 rounded-lg bg-secondary hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors"
+                  href={social.href}
+                  aria-label={social.label}
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-10 h-10 rounded-xl bg-secondary/80 hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
                 >
-                  <Icon className="w-5 h-5" />
-                </a>
+                  <social.icon className="w-5 h-5" />
+                </motion.a>
               ))}
             </div>
           </div>
 
           {/* Link Columns */}
-          {Object.entries(footerLinks).map(([category, links]) => (
-            <div key={category}>
-              <h4 className="font-semibold mb-4 capitalize">{category}</h4>
+          {Object.entries(footerLinks).map(([category, links], categoryIndex) => (
+            <motion.div 
+              key={category}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: categoryIndex * 0.1 }}
+            >
+              <h4 className="font-semibold mb-5 capitalize text-sm tracking-wide">{category}</h4>
               <ul className="space-y-3">
                 {links.map((link) => (
                   <li key={link.name}>
                     <a
                       href={link.href}
-                      className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                      className="text-muted-foreground hover:text-foreground text-sm transition-colors duration-200 hover:translate-x-0.5 inline-block"
                     >
                       {link.name}
                     </a>
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="pt-10 border-t border-border/50 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} EmbedAI. All rights reserved.
           </p>
-          <p className="text-sm text-muted-foreground">
-            Made with ❤️ for businesses that want to grow
+          <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+            Made with <span className="text-red-500">❤️</span> for businesses that want to grow
           </p>
         </div>
       </div>
