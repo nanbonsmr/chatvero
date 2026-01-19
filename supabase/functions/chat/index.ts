@@ -94,6 +94,22 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: true })
       .limit(20);
 
+    // Get crawled website content for context
+    const { data: crawledPages } = await supabase
+      .from("crawled_pages")
+      .select("url, title, content")
+      .eq("chatbot_id", chatbot_id)
+      .limit(5);
+
+    // Build website context from crawled content
+    let websiteContext = "";
+    if (crawledPages && crawledPages.length > 0) {
+      websiteContext = "\n\nHere is information from the website you can use to answer questions:\n\n";
+      for (const page of crawledPages) {
+        websiteContext += `### ${page.title || page.url}\n${page.content.substring(0, 2000)}\n\n`;
+      }
+    }
+
     // Build system prompt based on chatbot settings
     const toneDescriptions: Record<string, string> = {
       professional: "formal, business-focused, and professional",
@@ -114,7 +130,8 @@ Personality: Be ${toneDescriptions[chatbot.tone] || "friendly and helpful"}.
 
 ${goalInstructions[chatbot.goal] || "Help visitors with their questions."}
 
-Keep responses concise (2-3 sentences max unless more detail is needed). Be helpful and engaging.`;
+Keep responses concise (2-3 sentences max unless more detail is needed). Be helpful and engaging.
+${websiteContext}`;
 
     // Call Lovable AI Gateway
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

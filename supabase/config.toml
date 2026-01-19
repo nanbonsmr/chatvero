@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.widget]
 verify_jwt = false
+
+[functions.crawl-website]
+verify_jwt = false
