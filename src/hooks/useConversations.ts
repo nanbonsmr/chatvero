@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -26,6 +27,49 @@ interface Message {
 
 export function useConversations(chatbotId?: string) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Set up realtime subscription
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('conversations-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations',
+        },
+        (payload) => {
+          console.log('Conversation realtime update:', payload);
+          // Invalidate and refetch conversations
+          queryClient.invalidateQueries({ queryKey: ["conversations", user?.id, chatbotId] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          console.log('Message realtime update:', payload);
+          // Invalidate conversations to update message counts and last_message
+          queryClient.invalidateQueries({ queryKey: ["conversations", user?.id, chatbotId] });
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
+
+    return () => {
+      console.log('Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [user, chatbotId, queryClient]);
 
   return useQuery({
     queryKey: ["conversations", user?.id, chatbotId],
@@ -69,6 +113,38 @@ export function useConversations(chatbotId?: string) {
 }
 
 export function useConversationMessages(conversationId: string | null) {
+  const queryClient = useQueryClient();
+
+  // Set up realtime subscription for messages
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const channel = supabase
+      .channel(`messages-${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          console.log('New message received:', payload);
+          // Invalidate and refetch messages
+          queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+        }
+      )
+      .subscribe((status) => {
+        console.log('Messages realtime subscription status:', status);
+      });
+
+    return () => {
+      console.log('Cleaning up messages realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, queryClient]);
+
   return useQuery({
     queryKey: ["messages", conversationId],
     queryFn: async (): Promise<Message[]> => {
