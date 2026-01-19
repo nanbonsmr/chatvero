@@ -311,7 +311,10 @@ const Dashboard = () => {
                             Edit Settings
                           </DropdownMenuItem>
                           <DropdownMenuItem>View Analytics</DropdownMenuItem>
-                          <DropdownMenuItem>Chat History</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate("/conversations")}>
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Chat History
+                          </DropdownMenuItem>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <DropdownMenuItem 
