@@ -310,7 +310,10 @@ const Dashboard = () => {
                             <Settings className="w-4 h-4 mr-2" />
                             Edit Settings
                           </DropdownMenuItem>
-                          <DropdownMenuItem>View Analytics</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate("/analytics")}>
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            View Analytics
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate("/conversations")}>
                             <MessageCircle className="w-4 h-4 mr-2" />
                             Chat History
