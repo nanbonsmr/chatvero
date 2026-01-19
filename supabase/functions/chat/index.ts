@@ -13,6 +13,48 @@ interface ChatRequest {
   visitor_id: string;
 }
 
+// Simple keyword extraction for matching
+function extractKeywords(text: string): string[] {
+  const stopWords = new Set([
+    "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "do", "does", "did", "will", "would", "could",
+    "should", "may", "might", "can", "to", "of", "in", "for", "on", "with",
+    "at", "by", "from", "as", "into", "through", "during", "before", "after",
+    "above", "below", "between", "under", "again", "further", "then", "once",
+    "here", "there", "when", "where", "why", "how", "all", "each", "few",
+    "more", "most", "other", "some", "such", "no", "nor", "not", "only",
+    "own", "same", "so", "than", "too", "very", "just", "and", "but", "if",
+    "or", "because", "until", "while", "about", "against", "this", "that",
+    "these", "those", "what", "which", "who", "whom", "i", "you", "he", "she",
+    "it", "we", "they", "me", "him", "her", "us", "them", "my", "your", "his",
+    "its", "our", "their", "am", "please", "thanks", "thank", "hi", "hello",
+  ]);
+
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !stopWords.has(word));
+}
+
+// Score chunks based on keyword overlap
+function scoreChunk(chunkContent: string, keywords: string[]): number {
+  const chunkWords = new Set(chunkContent.toLowerCase().split(/\s+/));
+  let score = 0;
+  for (const keyword of keywords) {
+    if (chunkWords.has(keyword)) {
+      score += 1;
+    }
+    // Partial match bonus
+    for (const word of chunkWords) {
+      if (word.includes(keyword) || keyword.includes(word)) {
+        score += 0.5;
+      }
+    }
+  }
+  return score;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,6 +75,8 @@ Deno.serve(async (req) => {
       );
     }
 
+    console.log(`Chat request for chatbot: ${chatbot_id}, message: "${message.substring(0, 50)}..."`);
+
     // Get chatbot settings
     const { data: chatbot, error: chatbotError } = await supabase
       .from("chatbots")
@@ -41,6 +85,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (chatbotError || !chatbot) {
+      console.error("Chatbot not found:", chatbotError);
       return new Response(
         JSON.stringify({ error: "Chatbot not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -94,21 +139,74 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: true })
       .limit(20);
 
-    // Get crawled website content for context
+    // Extract keywords from the user's message for relevance matching
+    const keywords = extractKeywords(message);
+    console.log(`Extracted keywords: ${keywords.join(", ")}`);
+
+    // Retrieve knowledge chunks for this chatbot
+    const { data: chunks, error: chunksError } = await supabase
+      .from("chatbot_chunks")
+      .select("content, metadata, source_type")
+      .eq("chatbot_id", chatbot_id)
+      .limit(100);
+
+    if (chunksError) {
+      console.error("Error fetching chunks:", chunksError);
+    }
+
+    // Score and rank chunks by relevance
+    let relevantContext = "";
+    if (chunks && chunks.length > 0 && keywords.length > 0) {
+      const scoredChunks = chunks
+        .map(chunk => ({
+          ...chunk,
+          score: scoreChunk(chunk.content, keywords),
+        }))
+        .filter(chunk => chunk.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5); // Top 5 most relevant chunks
+
+      console.log(`Found ${scoredChunks.length} relevant chunks out of ${chunks.length} total`);
+
+      if (scoredChunks.length > 0) {
+        relevantContext = "\n\n### Relevant Knowledge Base Information:\n\n";
+        for (const chunk of scoredChunks) {
+          const source = chunk.metadata?.file_name || chunk.source_type || "document";
+          relevantContext += `[Source: ${source}]\n${chunk.content}\n\n---\n\n`;
+        }
+      }
+    }
+
+    // Also get crawled website content as fallback/additional context
     const { data: crawledPages } = await supabase
       .from("crawled_pages")
       .select("url, title, content")
       .eq("chatbot_id", chatbot_id)
-      .limit(5);
+      .limit(3);
 
-    // Build website context from crawled content
     let websiteContext = "";
     if (crawledPages && crawledPages.length > 0) {
-      websiteContext = "\n\nHere is information from the website you can use to answer questions:\n\n";
-      for (const page of crawledPages) {
-        websiteContext += `### ${page.title || page.url}\n${page.content.substring(0, 2000)}\n\n`;
+      // Score crawled pages too
+      const scoredPages = crawledPages
+        .map(page => ({
+          ...page,
+          score: scoreChunk(page.content, keywords),
+        }))
+        .filter(page => page.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 2);
+
+      if (scoredPages.length > 0) {
+        websiteContext = "\n\n### Website Information:\n\n";
+        for (const page of scoredPages) {
+          websiteContext += `[${page.title || page.url}]\n${page.content.substring(0, 1500)}\n\n---\n\n`;
+        }
       }
     }
+
+    // Combine contexts
+    const combinedContext = relevantContext + websiteContext;
+    const hasContext = combinedContext.trim().length > 0;
 
     // Build system prompt based on chatbot settings
     const toneDescriptions: Record<string, string> = {
@@ -130,8 +228,12 @@ Personality: Be ${toneDescriptions[chatbot.tone] || "friendly and helpful"}.
 
 ${goalInstructions[chatbot.goal] || "Help visitors with their questions."}
 
+${hasContext ? `Use the following knowledge base information to answer questions accurately. If the information doesn't contain the answer, you can provide general assistance but mention that you may not have complete information about that specific topic.` : ""}
+
 Keep responses concise (2-3 sentences max unless more detail is needed). Be helpful and engaging.
-${websiteContext}`;
+${combinedContext}`;
+
+    console.log(`System prompt length: ${systemPrompt.length} chars, has context: ${hasContext}`);
 
     // Call Lovable AI Gateway
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -141,7 +243,7 @@ ${websiteContext}`;
         "Authorization": `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           ...(history || []).map((m) => ({ role: m.role, content: m.content })),
@@ -153,7 +255,21 @@ ${websiteContext}`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("AI Gateway error:", errorText);
+      console.error("AI Gateway error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Service temporarily unavailable." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ error: "AI service unavailable" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -162,6 +278,8 @@ ${websiteContext}`;
 
     const aiResponse = await response.json();
     const assistantMessage = aiResponse.choices?.[0]?.message?.content || "I apologize, I couldn't process that request.";
+
+    console.log(`AI response: "${assistantMessage.substring(0, 100)}..."`);
 
     // Save assistant message
     await supabase.from("messages").insert({
