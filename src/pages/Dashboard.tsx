@@ -1,27 +1,9 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { 
-  MessageSquare, 
-  Plus, 
-  BarChart3, 
-  Users, 
-  MessageCircle,
-  Settings,
-  LogOut,
-  ExternalLink,
-  Copy,
-  MoreVertical,
-  TrendingUp,
-  Loader2,
-  Trash2,
-  Globe
-} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import { useChatbots, useDeleteChatbot } from "@/hooks/useChatbots";
-import { useCrawlWebsite } from "@/hooks/useCrawlWebsite";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,29 +21,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  MessageSquare,
+  Plus,
+  Users,
+  MessageCircle,
+  ExternalLink,
+  MoreVertical,
+  TrendingUp,
+  Loader2,
+  Trash2,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
 
 const Dashboard = () => {
   const { toast } = useToast();
-  const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const { data: chatbots = [], isLoading } = useChatbots();
   const deleteChatbot = useDeleteChatbot();
-  const { crawl, isLoading: isCrawling } = useCrawlWebsite();
-  const [crawlingBotId, setCrawlingBotId] = useState<string | null>(null);
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-  };
-
-  const copyEmbedCode = (botId: string) => {
-    const code = `<script src="https://czhltxnpaukjqmtgrgzc.supabase.co/functions/v1/widget?bot=${botId}"></script>`;
-    navigator.clipboard.writeText(code);
-    toast({
-      title: "Copied!",
-      description: "Embed code copied to clipboard",
-    });
-  };
 
   const handleDelete = async (botId: string) => {
     try {
@@ -79,248 +57,156 @@ const Dashboard = () => {
     }
   };
 
-  const handleCrawl = async (botId: string, websiteUrl: string) => {
-    setCrawlingBotId(botId);
-    toast({
-      title: "Crawling website...",
-      description: "This may take a minute. We'll notify you when complete.",
-    });
-
-    const result = await crawl(botId, websiteUrl, 15);
-    setCrawlingBotId(null);
-
-    if (result) {
-      toast({
-        title: "Crawl complete!",
-        description: `Saved ${result.pages_saved} pages. Your chatbot now has website context.`,
-      });
-    } else {
-      toast({
-        title: "Crawl failed",
-        description: "Could not crawl the website. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Calculate totals from real data
+  // Calculate totals
   const totalChats = chatbots.reduce((sum, bot) => sum + bot.total_chats, 0);
   const totalLeads = chatbots.reduce((sum, bot) => sum + bot.leads_captured, 0);
-  const avgConversion = chatbots.length > 0 
-    ? chatbots.reduce((sum, bot) => sum + bot.conversion_rate, 0) / chatbots.length 
+  const avgConversion = chatbots.length > 0
+    ? chatbots.reduce((sum, bot) => sum + bot.conversion_rate, 0) / chatbots.length
     : 0;
 
   const stats = [
-    { label: "Total Chatbots", value: chatbots.length, icon: MessageSquare },
-    { label: "Total Chats", value: totalChats.toLocaleString(), icon: MessageCircle },
-    { label: "Leads Captured", value: totalLeads.toLocaleString(), icon: Users },
-    { label: "Avg. Conversion", value: `${avgConversion.toFixed(1)}%`, icon: TrendingUp },
+    { 
+      label: "Total Chatbots", 
+      value: chatbots.length, 
+      icon: MessageSquare,
+      gradient: "from-violet-500 to-purple-500",
+    },
+    { 
+      label: "Total Conversations", 
+      value: totalChats, 
+      icon: MessageCircle,
+      gradient: "from-blue-500 to-cyan-500",
+    },
+    { 
+      label: "Leads Captured", 
+      value: totalLeads, 
+      icon: Users,
+      gradient: "from-green-500 to-emerald-500",
+    },
+    { 
+      label: "Avg. Conversion", 
+      value: `${avgConversion.toFixed(1)}%`, 
+      icon: TrendingUp,
+      gradient: "from-orange-500 to-amber-500",
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-card border-r border-border p-6 hidden lg:block">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
-            <MessageSquare className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="font-display font-bold text-xl">EmbedAI</span>
-        </div>
-
-        <nav className="space-y-2">
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium"
-          >
-            <BarChart3 className="w-5 h-5" />
-            Dashboard
-          </Link>
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors"
-          >
-            <MessageSquare className="w-5 h-5" />
-            Chatbots
-          </Link>
-          <Link
-            to="/leads"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors"
-          >
-            <Users className="w-5 h-5" />
-            Leads
-          </Link>
-          <a
-            href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors"
-          >
-            <Settings className="w-5 h-5" />
-            Settings
-          </a>
-        </nav>
-
-        <div className="absolute bottom-6 left-6 right-6">
-          <div className="mb-4 px-4 py-2 rounded-lg bg-secondary/50">
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors w-full"
-          >
-            <LogOut className="w-5 h-5" />
-            Log out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="lg:ml-64 p-8">
+    <DashboardLayout>
+      <div className="p-6 lg:p-8 space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl font-bold mb-1">Dashboard</h1>
-            <p className="text-muted-foreground">Manage your chatbots and track performance</p>
+            <h1 className="font-display text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              Overview of all your chatbots
+            </p>
           </div>
           <Link to="/create-chatbot">
-            <Button variant="hero">
+            <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20">
               <Plus className="w-5 h-5" />
               Create Chatbot
             </Button>
           </Link>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-card rounded-2xl border border-border p-6"
+              className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <stat.icon className="w-6 h-6 text-primary" />
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`} />
+              <div className="relative">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-4`}>
+                  <stat.icon className="w-6 h-6 text-white" />
                 </div>
+                <p className="text-3xl font-display font-bold mb-1">
+                  {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
+                </p>
+                <p className="text-muted-foreground text-sm">{stat.label}</p>
               </div>
-              <p className="text-3xl font-display font-bold mb-1">{stat.value}</p>
-              <p className="text-muted-foreground text-sm">{stat.label}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* Chatbots List */}
-        <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="p-6 border-b border-border">
-            <h2 className="font-display text-xl font-semibold">Your Chatbots</h2>
-          </div>
-
+        {/* Chatbots Grid */}
+        <div>
+          <h2 className="font-display text-xl font-semibold mb-4">Your Chatbots</h2>
+          
           {isLoading ? (
             <div className="p-12 text-center">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
               <p className="text-muted-foreground mt-4">Loading chatbots...</p>
             </div>
           ) : chatbots.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-8 h-8 text-muted-foreground" />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center"
+            >
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">No chatbots yet</h3>
-              <p className="text-muted-foreground mb-6">Create your first AI chatbot to get started</p>
+              <h3 className="font-display text-xl font-semibold mb-2">Create your first chatbot</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Build an AI-powered chatbot trained on your website content to engage visitors and capture leads.
+              </p>
               <Link to="/create-chatbot">
-                <Button variant="hero">
+                <Button size="lg" className="bg-gradient-to-r from-primary to-primary/80">
                   <Plus className="w-5 h-5" />
                   Create Chatbot
                 </Button>
               </Link>
-            </div>
+            </motion.div>
           ) : (
-            <div className="divide-y divide-border">
-              {chatbots.map((bot) => (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {chatbots.map((bot, index) => (
                 <motion.div
                   key={bot.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="p-6 hover:bg-secondary/50 transition-colors"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="group relative rounded-2xl border border-border/50 bg-card overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                    {/* Bot Info */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                          <MessageSquare className="w-5 h-5 text-primary-foreground" />
+                  {/* Gradient accent */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/50" />
+                  
+                  <div className="p-6">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                          <MessageSquare className="w-6 h-6 text-primary" />
                         </div>
                         <div>
                           <h3 className="font-semibold">{bot.name}</h3>
-                          <a
-                            href={bot.website_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
-                          >
-                            {bot.website_url}
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            bot.is_active 
+                              ? "bg-green-500/10 text-green-500" 
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            {bot.is_active ? "Active" : "Inactive"}
+                          </span>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-8">
-                      <div className="text-center">
-                        <p className="font-semibold">{bot.total_chats.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">Chats</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-semibold">{bot.leads_captured}</p>
-                        <p className="text-xs text-muted-foreground">Leads</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-semibold text-green-500">{bot.conversion_rate}%</p>
-                        <p className="text-xs text-muted-foreground">Conversion</p>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyEmbedCode(bot.id)}
-                      >
-                        <Copy className="w-4 h-4" />
-                        Copy Code
-                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-5 h-5" />
+                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
-                            onClick={() => handleCrawl(bot.id, bot.website_url)}
-                            disabled={isCrawling}
-                          >
-                            <Globe className="w-4 h-4 mr-2" />
-                            {crawlingBotId === bot.id ? "Crawling..." : "Crawl Website"}
-                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/chatbot/${bot.id}/settings`)}>
-                            <Settings className="w-4 h-4 mr-2" />
-                            Edit Settings
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/analytics")}>
-                            <BarChart3 className="w-4 h-4 mr-2" />
-                            View Analytics
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/conversations")}>
-                            <MessageCircle className="w-4 h-4 mr-2" />
-                            Chat History
+                            Settings
                           </DropdownMenuItem>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onSelect={(e) => e.preventDefault()}
                                 className="text-destructive"
                               >
@@ -332,14 +218,14 @@ const Dashboard = () => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete chatbot?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  This will permanently delete "{bot.name}" and all its data including conversations and leads.
+                                  This will permanently delete "{bot.name}" and all its data.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleDelete(bot.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  className="bg-destructive text-destructive-foreground"
                                 >
                                   Delete
                                 </AlertDialogAction>
@@ -349,14 +235,51 @@ const Dashboard = () => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
+
+                    {/* URL */}
+                    <a
+                      href={bot.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 mb-6 truncate"
+                    >
+                      {bot.website_url}
+                      <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                    </a>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-4 mb-6">
+                      <div className="text-center p-3 rounded-xl bg-secondary/50">
+                        <p className="text-lg font-semibold">{bot.total_chats}</p>
+                        <p className="text-xs text-muted-foreground">Chats</p>
+                      </div>
+                      <div className="text-center p-3 rounded-xl bg-secondary/50">
+                        <p className="text-lg font-semibold">{bot.leads_captured}</p>
+                        <p className="text-xs text-muted-foreground">Leads</p>
+                      </div>
+                      <div className="text-center p-3 rounded-xl bg-secondary/50">
+                        <p className="text-lg font-semibold text-green-500">{bot.conversion_rate}%</p>
+                        <p className="text-xs text-muted-foreground">Conv.</p>
+                      </div>
+                    </div>
+
+                    {/* Action */}
+                    <Button
+                      variant="outline"
+                      className="w-full group/btn"
+                      onClick={() => navigate(`/chatbot/${bot.id}`)}
+                    >
+                      Open Dashboard
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
                   </div>
                 </motion.div>
               ))}
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
