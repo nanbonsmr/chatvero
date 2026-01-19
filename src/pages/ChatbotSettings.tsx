@@ -22,7 +22,9 @@ import {
   MessageSquare,
   Palette,
   Globe,
-  Sparkles
+  Sparkles,
+  Database,
+  ChevronRight
 } from "lucide-react";
 
 const tones = [
@@ -194,6 +196,31 @@ const ChatbotSettings = () => {
                 onCheckedChange={(checked) => setChatbot({ ...chatbot, is_active: checked })}
               />
             </div>
+          </motion.div>
+
+          {/* Knowledge Base Link */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <Link
+              to={`/chatbot/${id}/knowledge`}
+              className="flex items-center justify-between bg-card rounded-2xl border border-border p-6 hover:bg-secondary/30 transition-colors group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Database className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-semibold">Knowledge Base</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Manage crawled pages and website content
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </Link>
           </motion.div>
 
           {/* Basic Info */}
