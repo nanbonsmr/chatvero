@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      chatbot_chunks: {
+        Row: {
+          chatbot_id: string
+          chunk_index: number
+          content: string
+          created_at: string
+          document_id: string | null
+          id: string
+          metadata: Json | null
+          source_type: string
+          source_url: string | null
+        }
+        Insert: {
+          chatbot_id: string
+          chunk_index?: number
+          content: string
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          metadata?: Json | null
+          source_type?: string
+          source_url?: string | null
+        }
+        Update: {
+          chatbot_id?: string
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          metadata?: Json | null
+          source_type?: string
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_chunks_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chatbot_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chatbot_documents: {
         Row: {
           chatbot_id: string
