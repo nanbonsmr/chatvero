@@ -14,13 +14,172 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chatbots: {
+        Row: {
+          created_at: string
+          goal: string
+          id: string
+          is_active: boolean | null
+          name: string
+          primary_color: string | null
+          tone: string
+          updated_at: string
+          user_id: string
+          website_url: string
+          welcome_message: string | null
+        }
+        Insert: {
+          created_at?: string
+          goal?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          primary_color?: string | null
+          tone?: string
+          updated_at?: string
+          user_id: string
+          website_url: string
+          welcome_message?: string | null
+        }
+        Update: {
+          created_at?: string
+          goal?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          primary_color?: string | null
+          tone?: string
+          updated_at?: string
+          user_id?: string
+          website_url?: string
+          welcome_message?: string | null
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          chatbot_id: string
+          ended_at: string | null
+          id: string
+          page_url: string | null
+          started_at: string
+          user_agent: string | null
+          visitor_id: string
+        }
+        Insert: {
+          chatbot_id: string
+          ended_at?: string | null
+          id?: string
+          page_url?: string | null
+          started_at?: string
+          user_agent?: string | null
+          visitor_id: string
+        }
+        Update: {
+          chatbot_id?: string
+          ended_at?: string | null
+          id?: string
+          page_url?: string | null
+          started_at?: string
+          user_agent?: string | null
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          chatbot_id: string
+          conversation_id: string | null
+          created_at: string
+          custom_data: Json | null
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+        }
+        Insert: {
+          chatbot_id: string
+          conversation_id?: string | null
+          created_at?: string
+          custom_data?: Json | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+        }
+        Update: {
+          chatbot_id?: string
+          conversation_id?: string | null
+          created_at?: string
+          custom_data?: Json | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      owns_chatbot: { Args: { chatbot_uuid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
