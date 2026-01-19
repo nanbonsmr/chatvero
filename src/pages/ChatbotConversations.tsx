@@ -28,7 +28,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useConversations, useConversationMessages, useArchiveConversation, useDeleteConversation } from "@/hooks/useConversations";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useConversations, useConversationMessages, useArchiveConversation, useDeleteConversation, useBulkArchiveConversations, useBulkDeleteConversations } from "@/hooks/useConversations";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   MessageSquare,
@@ -44,6 +45,8 @@ import {
   Archive,
   ArchiveRestore,
   Trash2,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,12 +75,16 @@ const ChatbotConversations = () => {
   const [timeFilter, setTimeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [showArchived, setShowArchived] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const { data: conversations = [], isLoading } = useConversations(chatbotId);
   const { data: messages = [], isLoading: messagesLoading } = useConversationMessages(selectedConversation);
   const archiveMutation = useArchiveConversation();
   const deleteMutation = useDeleteConversation();
-  const [showArchived, setShowArchived] = useState(false);
+  const bulkArchiveMutation = useBulkArchiveConversations();
+  const bulkDeleteMutation = useBulkDeleteConversations();
 
   const filteredConversations = useMemo(() => {
     let filtered = conversations.filter((conv) => {
@@ -162,6 +169,44 @@ const ChatbotConversations = () => {
     handleCloseDialog();
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredConversations.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredConversations.map((c) => c.id)));
+    }
+  };
+
+  const handleBulkArchive = (archive: boolean) => {
+    bulkArchiveMutation.mutate(
+      { conversationIds: Array.from(selectedIds), archive },
+      { onSuccess: () => setSelectedIds(new Set()) }
+    );
+  };
+
+  const handleBulkDelete = () => {
+    bulkDeleteMutation.mutate(Array.from(selectedIds), {
+      onSuccess: () => {
+        setSelectedIds(new Set());
+        setBulkDeleteOpen(false);
+      },
+    });
+  };
+
+  const isBulkPending = bulkArchiveMutation.isPending || bulkDeleteMutation.isPending;
+
   return (
     <DashboardLayout>
       <div className="p-4 sm:p-6 lg:p-8">
@@ -229,12 +274,96 @@ const ChatbotConversations = () => {
           </div>
         </div>
 
+        {/* Bulk Actions Bar */}
+        {selectedIds.size > 0 && (
+          <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-xl flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium">
+              {selectedIds.size} selected
+            </span>
+            <div className="flex gap-2 ml-auto">
+              {showArchived ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkArchive(false)}
+                  disabled={isBulkPending}
+                >
+                  <ArchiveRestore className="w-4 h-4 mr-1" />
+                  Restore
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkArchive(true)}
+                  disabled={isBulkPending}
+                >
+                  <Archive className="w-4 h-4 mr-1" />
+                  Archive
+                </Button>
+              )}
+              <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={isBulkPending}>
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {selectedIds.size} Conversation{selectedIds.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the selected conversations and all their messages. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleBulkDelete}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Conversations List */}
         <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-          <div className="p-3 sm:p-4 border-b border-border/50">
+          <div className="p-3 sm:p-4 border-b border-border/50 flex items-center justify-between">
             <h2 className="font-semibold text-sm sm:text-base">
               {filteredConversations.length} Conversation{filteredConversations.length !== 1 ? "s" : ""}
             </h2>
+            {filteredConversations.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSelectAll}
+                className="text-xs gap-1.5"
+              >
+                {selectedIds.size === filteredConversations.length ? (
+                  <>
+                    <CheckSquare className="w-4 h-4" />
+                    Deselect All
+                  </>
+                ) : (
+                  <>
+                    <Square className="w-4 h-4" />
+                    Select All
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {isLoading ? (
@@ -253,10 +382,17 @@ const ChatbotConversations = () => {
                   key={conv.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="p-3 sm:p-4 hover:bg-secondary/30 transition-colors"
+                  className={`p-3 sm:p-4 hover:bg-secondary/30 transition-colors ${
+                    selectedIds.has(conv.id) ? "bg-primary/5" : ""
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Checkbox
+                        checked={selectedIds.has(conv.id)}
+                        onCheckedChange={() => toggleSelect(conv.id)}
+                        className="flex-shrink-0"
+                      />
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
                         <User className="w-4 h-4 text-primary" />
                       </div>

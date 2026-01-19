@@ -261,3 +261,76 @@ export function useDeleteConversation() {
     },
   });
 }
+
+export function useBulkArchiveConversations() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ conversationIds, archive }: { conversationIds: string[]; archive: boolean }) => {
+      const { error } = await supabase
+        .from("conversations")
+        .update({ archived_at: archive ? new Date().toISOString() : null })
+        .in("id", conversationIds);
+
+      if (error) throw error;
+      return conversationIds.length;
+    },
+    onSuccess: (count, { archive }) => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      toast({
+        title: archive ? "Conversations archived" : "Conversations restored",
+        description: `${count} conversation${count !== 1 ? "s" : ""} ${archive ? "archived" : "restored"}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update conversations",
+        variant: "destructive",
+      });
+      console.error("Bulk archive error:", error);
+    },
+  });
+}
+
+export function useBulkDeleteConversations() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (conversationIds: string[]) => {
+      // First delete all messages for these conversations
+      const { error: messagesError } = await supabase
+        .from("messages")
+        .delete()
+        .in("conversation_id", conversationIds);
+
+      if (messagesError) throw messagesError;
+
+      // Then delete the conversations
+      const { error } = await supabase
+        .from("conversations")
+        .delete()
+        .in("id", conversationIds);
+
+      if (error) throw error;
+      return conversationIds.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      toast({
+        title: "Conversations deleted",
+        description: `${count} conversation${count !== 1 ? "s" : ""} permanently deleted`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete conversations",
+        variant: "destructive",
+      });
+      console.error("Bulk delete error:", error);
+    },
+  });
+}
