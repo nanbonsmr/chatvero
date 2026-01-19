@@ -68,7 +68,7 @@ const ChatbotOverview = () => {
     dateLabel: format(new Date(stat.date), "MMM d"),
   })) || [];
 
-  const recentConversations = conversations.slice(0, 5);
+  const recentConversations = conversations.slice(0, 3);
 
   if (!chatbot) {
     return (
@@ -256,8 +256,10 @@ const ChatbotOverview = () => {
                       </span>
                     </div>
                     {conv.last_message && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {conv.last_message}
+                      <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                        {conv.last_message.length > 50 
+                          ? `${conv.last_message.substring(0, 50)}...` 
+                          : conv.last_message}
                       </p>
                     )}
                   </div>
