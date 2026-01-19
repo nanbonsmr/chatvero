@@ -94,6 +94,41 @@ export type Database = {
           },
         ]
       }
+      crawled_pages: {
+        Row: {
+          chatbot_id: string
+          content: string
+          crawled_at: string
+          id: string
+          title: string | null
+          url: string
+        }
+        Insert: {
+          chatbot_id: string
+          content: string
+          crawled_at?: string
+          id?: string
+          title?: string | null
+          url: string
+        }
+        Update: {
+          chatbot_id?: string
+          content?: string
+          crawled_at?: string
+          id?: string
+          title?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawled_pages_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           chatbot_id: string

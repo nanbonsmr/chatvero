@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,11 +15,13 @@ import {
   MoreVertical,
   TrendingUp,
   Loader2,
-  Trash2
+  Trash2,
+  Globe
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatbots, useDeleteChatbot } from "@/hooks/useChatbots";
+import { useCrawlWebsite } from "@/hooks/useCrawlWebsite";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +46,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { data: chatbots = [], isLoading } = useChatbots();
   const deleteChatbot = useDeleteChatbot();
+  const { crawl, isLoading: isCrawling } = useCrawlWebsite();
+  const [crawlingBotId, setCrawlingBotId] = useState<string | null>(null);
 
   const handleLogout = async () => {
     await signOut();
@@ -69,6 +74,30 @@ const Dashboard = () => {
       toast({
         title: "Error",
         description: "Failed to delete chatbot",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCrawl = async (botId: string, websiteUrl: string) => {
+    setCrawlingBotId(botId);
+    toast({
+      title: "Crawling website...",
+      description: "This may take a minute. We'll notify you when complete.",
+    });
+
+    const result = await crawl(botId, websiteUrl, 15);
+    setCrawlingBotId(null);
+
+    if (result) {
+      toast({
+        title: "Crawl complete!",
+        description: `Saved ${result.pages_saved} pages. Your chatbot now has website context.`,
+      });
+    } else {
+      toast({
+        title: "Crawl failed",
+        description: "Could not crawl the website. Please try again.",
         variant: "destructive",
       });
     }
@@ -270,6 +299,13 @@ const Dashboard = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            onClick={() => handleCrawl(bot.id, bot.website_url)}
+                            disabled={isCrawling}
+                          >
+                            <Globe className="w-4 h-4 mr-2" />
+                            {crawlingBotId === bot.id ? "Crawling..." : "Crawl Website"}
+                          </DropdownMenuItem>
                           <DropdownMenuItem>Edit Settings</DropdownMenuItem>
                           <DropdownMenuItem>View Analytics</DropdownMenuItem>
                           <DropdownMenuItem>Chat History</DropdownMenuItem>
