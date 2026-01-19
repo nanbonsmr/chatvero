@@ -27,7 +27,8 @@ import {
   ChevronRight,
   Code,
   Copy,
-  Check
+  Check,
+  ExternalLink
 } from "lucide-react";
 
 const tones = [
@@ -232,19 +233,27 @@ const ChatbotSettings = () => {
               {embedCode}
             </div>
 
-            <Button onClick={copyEmbedCode} variant="outline" className="w-full">
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4 text-green-500" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copy Embed Code
-                </>
-              )}
-            </Button>
+            <div className="flex gap-3">
+              <Button onClick={copyEmbedCode} variant="outline" className="flex-1">
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 text-green-500" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy Code
+                  </>
+                )}
+              </Button>
+              <Link to={`/chatbot/${id}/test`} className="flex-1">
+                <Button variant="default" className="w-full bg-gradient-to-r from-primary to-primary/80">
+                  <ExternalLink className="w-4 h-4" />
+                  Test Widget
+                </Button>
+              </Link>
+            </div>
 
             <p className="text-xs text-muted-foreground mt-3">
               Paste this code before the closing &lt;/body&gt; tag on your website

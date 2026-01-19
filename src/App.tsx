@@ -16,6 +16,7 @@ import ChatbotConversations from "./pages/ChatbotConversations";
 import ChatbotLeads from "./pages/ChatbotLeads";
 import ChatbotAnalytics from "./pages/ChatbotAnalytics";
 import CrawledPages from "./pages/CrawledPages";
+import ChatbotWidgetTest from "./pages/ChatbotWidgetTest";
 import Conversations from "./pages/Conversations";
 import Analytics from "./pages/Analytics";
 import Leads from "./pages/Leads";
@@ -47,6 +48,7 @@ const App = () => {
               <Route path="/chatbot/:id/leads" element={<ProtectedRoute><ChatbotLeads /></ProtectedRoute>} />
               <Route path="/chatbot/:id/analytics" element={<ProtectedRoute><ChatbotAnalytics /></ProtectedRoute>} />
               <Route path="/chatbot/:id/knowledge" element={<ProtectedRoute><CrawledPages /></ProtectedRoute>} />
+              <Route path="/chatbot/:id/test" element={<ProtectedRoute><ChatbotWidgetTest /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
