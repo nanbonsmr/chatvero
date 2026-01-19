@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import CreateChatbot from "./pages/CreateChatbot";
 import ChatbotSettings from "./pages/ChatbotSettings";
 import Conversations from "./pages/Conversations";
+import CrawledPages from "./pages/CrawledPages";
 import Leads from "./pages/Leads";
 import NotFound from "./pages/NotFound";
 
@@ -52,6 +53,11 @@ const App = () => {
               <Route path="/conversations" element={
                 <ProtectedRoute>
                   <Conversations />
+                </ProtectedRoute>
+              } />
+              <Route path="/chatbot/:id/knowledge" element={
+                <ProtectedRoute>
+                  <CrawledPages />
                 </ProtectedRoute>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
