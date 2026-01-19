@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,15 +6,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MessageSquare, ArrowLeft, Eye, EyeOff, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Signup = () => {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp, user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
 
   const passwordRequirements = [
     { label: "At least 8 characters", met: password.length >= 8 },
@@ -26,16 +33,39 @@ const Signup = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate signup - In production, this would connect to Lovable Cloud auth
-    setTimeout(() => {
+    const { error } = await signUp(email, password);
+
+    if (error) {
       setIsLoading(false);
+      
+      let errorMessage = error.message;
+      if (error.message.includes("already registered")) {
+        errorMessage = "An account with this email already exists. Please sign in instead.";
+      }
+      
       toast({
-        title: "Account created!",
-        description: "Welcome to EmbedAI. Let's create your first chatbot.",
+        title: "Signup failed",
+        description: errorMessage,
+        variant: "destructive",
       });
-      navigate("/dashboard");
-    }, 1000);
+      return;
+    }
+
+    setIsLoading(false);
+    toast({
+      title: "Account created!",
+      description: "Please check your email to confirm your account, then sign in.",
+    });
+    navigate("/login");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
@@ -75,19 +105,6 @@ const Signup = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="h-12"
-              />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

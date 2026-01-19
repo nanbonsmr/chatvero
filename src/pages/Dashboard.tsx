@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   MessageSquare, 
@@ -16,6 +16,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +51,13 @@ const mockChatbots = [
 const Dashboard = () => {
   const [chatbots] = useState(mockChatbots);
   const { toast } = useToast();
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   const copyEmbedCode = (botId: string) => {
     const code = `<script src="https://embedai.dev/widget.js" data-bot-id="${botId}"></script>`;
@@ -110,12 +118,16 @@ const Dashboard = () => {
         </nav>
 
         <div className="absolute bottom-6 left-6 right-6">
-          <Link to="/">
-            <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors w-full">
-              <LogOut className="w-5 h-5" />
-              Log out
-            </button>
-          </Link>
+          <div className="mb-4 px-4 py-2 rounded-lg bg-secondary/50">
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors w-full"
+          >
+            <LogOut className="w-5 h-5" />
+            Log out
+          </button>
         </div>
       </aside>
 
