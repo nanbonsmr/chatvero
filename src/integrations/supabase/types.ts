@@ -21,6 +21,7 @@ export type Database = {
           content: string
           created_at: string
           document_id: string | null
+          embedding: string | null
           id: string
           metadata: Json | null
           source_type: string
@@ -32,6 +33,7 @@ export type Database = {
           content: string
           created_at?: string
           document_id?: string | null
+          embedding?: string | null
           id?: string
           metadata?: Json | null
           source_type?: string
@@ -43,6 +45,7 @@ export type Database = {
           content?: string
           created_at?: string
           document_id?: string | null
+          embedding?: string | null
           id?: string
           metadata?: Json | null
           source_type?: string
@@ -312,6 +315,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      match_chunks: {
+        Args: {
+          match_chatbot_id: string
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          similarity: number
+          source_type: string
+          source_url: string
+        }[]
+      }
       owns_chatbot: { Args: { chatbot_uuid: string }; Returns: boolean }
     }
     Enums: {

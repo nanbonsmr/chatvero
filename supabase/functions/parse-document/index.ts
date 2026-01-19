@@ -348,6 +348,7 @@ Deno.serve(async (req) => {
         .eq("document_id", documentId);
 
       // Insert chunks
+      const insertedChunkIds: string[] = [];
       if (chunks.length > 0) {
         const chunkRecords = chunks.map((content, index) => ({
           chatbot_id: chatbotId,
@@ -362,13 +363,44 @@ Deno.serve(async (req) => {
           },
         }));
 
-        const { error: insertError } = await supabase
+        const { data: insertedChunks, error: insertError } = await supabase
           .from("chatbot_chunks")
-          .insert(chunkRecords);
+          .insert(chunkRecords)
+          .select("id");
 
         if (insertError) {
           console.error("Failed to insert chunks:", insertError);
           throw new Error(`Failed to save chunks: ${insertError.message}`);
+        }
+
+        if (insertedChunks) {
+          insertedChunkIds.push(...insertedChunks.map(c => c.id));
+        }
+      }
+
+      // Generate embeddings for all chunks
+      if (insertedChunkIds.length > 0) {
+        console.log(`Generating embeddings for ${insertedChunkIds.length} chunks...`);
+        
+        try {
+          // Call the generate-embedding function in batches
+          const batchSize = 10;
+          for (let i = 0; i < chunks.length; i += batchSize) {
+            const batchChunks = chunks.slice(i, i + batchSize);
+            const batchIds = insertedChunkIds.slice(i, i + batchSize);
+            
+            const { error: embeddingError } = await supabase.functions.invoke("generate-embedding", {
+              body: { texts: batchChunks, chunkIds: batchIds },
+            });
+            
+            if (embeddingError) {
+              console.error(`Embedding error for batch ${i}:`, embeddingError);
+            }
+          }
+          console.log("Embeddings generated successfully");
+        } catch (embErr) {
+          console.error("Failed to generate embeddings:", embErr);
+          // Don't fail the whole operation - chunks are still useful for keyword search
         }
       }
 
@@ -386,6 +418,7 @@ Deno.serve(async (req) => {
           documentId,
           chunksCreated: chunks.length,
           totalCharacters: extractedText.length,
+          embeddingsGenerated: insertedChunkIds.length,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
