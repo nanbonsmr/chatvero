@@ -17,7 +17,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useConversations, useConversationMessages } from "@/hooks/useConversations";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useConversations, useConversationMessages, useArchiveConversation, useDeleteConversation } from "@/hooks/useConversations";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   MessageSquare,
@@ -30,6 +41,9 @@ import {
   ArrowUpDown,
   Tag,
   Eye,
+  Archive,
+  ArchiveRestore,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,9 +75,19 @@ const ChatbotConversations = () => {
 
   const { data: conversations = [], isLoading } = useConversations(chatbotId);
   const { data: messages = [], isLoading: messagesLoading } = useConversationMessages(selectedConversation);
+  const archiveMutation = useArchiveConversation();
+  const deleteMutation = useDeleteConversation();
+  const [showArchived, setShowArchived] = useState(false);
 
   const filteredConversations = useMemo(() => {
     let filtered = conversations.filter((conv) => {
+      // Archive filter
+      if (showArchived) {
+        if (!conv.archived_at) return false;
+      } else {
+        if (conv.archived_at) return false;
+      }
+
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch = 
@@ -111,7 +135,7 @@ const ChatbotConversations = () => {
     });
 
     return filtered;
-  }, [conversations, searchQuery, categoryFilter, timeFilter, sortOrder]);
+  }, [conversations, searchQuery, categoryFilter, timeFilter, sortOrder, showArchived]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
   const recentMessages = messages.slice(-50);
@@ -124,6 +148,18 @@ const ChatbotConversations = () => {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedConversation(null);
+  };
+
+  const handleArchive = (convId: string, archive: boolean) => {
+    archiveMutation.mutate({ conversationId: convId, archive });
+    if (archive) {
+      handleCloseDialog();
+    }
+  };
+
+  const handleDelete = (convId: string) => {
+    deleteMutation.mutate(convId);
+    handleCloseDialog();
   };
 
   return (
@@ -180,6 +216,15 @@ const ChatbotConversations = () => {
             >
               <ArrowUpDown className="w-4 h-4" />
               <span className="hidden sm:inline">{sortOrder === "newest" ? "Newest" : "Oldest"}</span>
+            </Button>
+            <Button
+              variant={showArchived ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setShowArchived(!showArchived)}
+              className="flex items-center gap-2"
+            >
+              <Archive className="w-4 h-4" />
+              <span className="hidden sm:inline">{showArchived ? "Archived" : "Show Archived"}</span>
             </Button>
           </div>
         </div>
@@ -278,6 +323,62 @@ const ChatbotConversations = () => {
                     </span>
                   )}
                   <Badge variant="secondary">{selectedConv.category}</Badge>
+                  {selectedConv.archived_at && (
+                    <Badge variant="outline" className="text-orange-600 border-orange-300">
+                      <Archive className="w-3 h-3 mr-1" />
+                      Archived
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 pb-3 border-b">
+                  {selectedConv.archived_at ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleArchive(selectedConv.id, false)}
+                      disabled={archiveMutation.isPending}
+                    >
+                      <ArchiveRestore className="w-4 h-4 mr-1" />
+                      Restore
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleArchive(selectedConv.id, true)}
+                      disabled={archiveMutation.isPending}
+                    >
+                      <Archive className="w-4 h-4 mr-1" />
+                      Archive
+                    </Button>
+                  )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Conversation?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete this conversation and all its messages. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(selectedConv.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
 
                 {/* Messages */}

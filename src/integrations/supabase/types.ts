@@ -58,6 +58,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          archived_at: string | null
           category: string | null
           chatbot_id: string
           ended_at: string | null
@@ -68,6 +69,7 @@ export type Database = {
           visitor_id: string
         }
         Insert: {
+          archived_at?: string | null
           category?: string | null
           chatbot_id: string
           ended_at?: string | null
@@ -78,6 +80,7 @@ export type Database = {
           visitor_id: string
         }
         Update: {
+          archived_at?: string | null
           category?: string | null
           chatbot_id?: string
           ended_at?: string | null
