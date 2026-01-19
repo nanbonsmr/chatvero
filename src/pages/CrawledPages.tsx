@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,8 +27,8 @@ import { useCrawledPages, useDeleteCrawledPage, useRecrawlPage } from "@/hooks/u
 import { useCrawlWebsite } from "@/hooks/useCrawlWebsite";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
-  ArrowLeft,
   Globe,
   Loader2,
   Search,
@@ -151,19 +151,12 @@ const CrawledPages = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 py-8">
+    <DashboardLayout>
+      <div className="p-6 lg:p-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link to={`/chatbot/${chatbotId}/settings`}>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div className="flex-1">
-            <h1 className="font-display text-2xl font-bold">Knowledge Base</h1>
-            <p className="text-muted-foreground">{chatbot?.name || "Chatbot"} - Crawled Pages</p>
-          </div>
+        <div className="mb-8">
+          <h1 className="font-display text-2xl font-bold">Knowledge Base</h1>
+          <p className="text-muted-foreground mt-1">{chatbot?.name || "Chatbot"} - Crawled Pages</p>
         </div>
 
         {/* Add New Page */}
@@ -320,31 +313,31 @@ const CrawledPages = () => {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Content Preview Dialog */}
-      <Dialog open={!!previewPage} onOpenChange={() => setPreviewPage(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>{previewPage?.title}</DialogTitle>
-            <a
-              href={previewPage?.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
-            >
-              {previewPage?.url}
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </DialogHeader>
-          <ScrollArea className="h-[400px] mt-4">
-            <div className="text-sm whitespace-pre-wrap text-muted-foreground">
-              {previewPage?.content}
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-    </div>
+        {/* Content Preview Dialog */}
+        <Dialog open={!!previewPage} onOpenChange={() => setPreviewPage(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>{previewPage?.title}</DialogTitle>
+              <a
+                href={previewPage?.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+              >
+                {previewPage?.url}
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </DialogHeader>
+            <ScrollArea className="h-[400px] mt-4">
+              <div className="text-sm whitespace-pre-wrap text-muted-foreground">
+                {previewPage?.content}
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </DashboardLayout>
   );
 };
 

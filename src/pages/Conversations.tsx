@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,11 +10,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { useConversations, useConversationMessages } from "@/hooks/useConversations";
 import { useChatbots } from "@/hooks/useChatbots";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
   MessageSquare,
-  ArrowLeft,
   Search,
   User,
   Bot,
@@ -24,7 +23,6 @@ import {
   Globe,
   Loader2,
   X,
-  ChevronRight,
 } from "lucide-react";
 
 const Conversations = () => {
@@ -51,19 +49,12 @@ const Conversations = () => {
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <DashboardLayout>
+      <div className="p-6 lg:p-8 h-[calc(100vh-3.5rem)]">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/dashboard">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="font-display text-2xl font-bold">Conversations</h1>
-            <p className="text-muted-foreground">View chat history across your chatbots</p>
-          </div>
+        <div className="mb-6">
+          <h1 className="font-display text-3xl font-bold">All Conversations</h1>
+          <p className="text-muted-foreground mt-1">View chat history across all chatbots</p>
         </div>
 
         {/* Filters */}
@@ -93,10 +84,10 @@ const Conversations = () => {
         </div>
 
         {/* Main Content */}
-        <div className="grid lg:grid-cols-[400px,1fr] gap-6">
+        <div className="grid lg:grid-cols-[400px,1fr] gap-6 h-[calc(100%-10rem)]">
           {/* Conversations List */}
-          <div className="bg-card rounded-2xl border border-border overflow-hidden">
-            <div className="p-4 border-b border-border">
+          <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+            <div className="p-4 border-b border-border/50">
               <h2 className="font-semibold">
                 {filteredConversations.length} Conversation{filteredConversations.length !== 1 ? "s" : ""}
               </h2>
@@ -112,8 +103,8 @@ const Conversations = () => {
                 <p className="text-muted-foreground">No conversations found</p>
               </div>
             ) : (
-              <ScrollArea className="h-[600px]">
-                <div className="divide-y divide-border">
+              <ScrollArea className="h-[500px]">
+                <div className="divide-y divide-border/50">
                   {filteredConversations.map((conv) => (
                     <motion.button
                       key={conv.id}
@@ -126,11 +117,11 @@ const Conversations = () => {
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                            <User className="w-4 h-4 text-muted-foreground" />
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                            <User className="w-4 h-4 text-primary" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm truncate max-w-[180px]">
+                            <p className="font-medium text-sm truncate max-w-[150px]">
                               {conv.visitor_id.substring(0, 12)}...
                             </p>
                             <p className="text-xs text-muted-foreground">{conv.chatbot_name}</p>
@@ -154,7 +145,7 @@ const Conversations = () => {
           </div>
 
           {/* Message View */}
-          <div className="bg-card rounded-2xl border border-border overflow-hidden">
+          <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
             <AnimatePresence mode="wait">
               {selectedConversation && selectedConv ? (
                 <motion.div
@@ -164,8 +155,8 @@ const Conversations = () => {
                   exit={{ opacity: 0 }}
                   className="h-full flex flex-col"
                 >
-                  {/* Conversation Header */}
-                  <div className="p-4 border-b border-border">
+                  {/* Header */}
+                  <div className="p-4 border-b border-border/50">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold">{selectedConv.chatbot_name}</h3>
@@ -194,7 +185,7 @@ const Conversations = () => {
                   </div>
 
                   {/* Messages */}
-                  <ScrollArea className="flex-1 p-4 h-[500px]">
+                  <ScrollArea className="flex-1 p-4 h-[400px]">
                     {messagesLoading ? (
                       <div className="flex items-center justify-center h-full">
                         <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -211,7 +202,7 @@ const Conversations = () => {
                             <div
                               className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                                 msg.role === "assistant"
-                                  ? "bg-primary/10"
+                                  ? "bg-gradient-to-br from-primary/20 to-primary/5"
                                   : "bg-secondary"
                               }`}
                             >
@@ -249,7 +240,7 @@ const Conversations = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="h-[600px] flex items-center justify-center"
+                  className="h-full flex items-center justify-center min-h-[500px]"
                 >
                   <div className="text-center">
                     <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
@@ -266,7 +257,7 @@ const Conversations = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

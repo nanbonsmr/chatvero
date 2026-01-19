@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/DashboardLayout";
 import { 
-  ArrowLeft, 
   Save, 
   Loader2, 
   MessageSquare,
@@ -140,29 +140,26 @@ const ChatbotSettings = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
     );
   }
 
   if (!chatbot) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <DashboardLayout>
+      <div className="p-6 lg:p-8 max-w-3xl">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/dashboard">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div className="flex-1">
-            <h1 className="font-display text-2xl font-bold">Chatbot Settings</h1>
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Settings</h1>
             <p className="text-muted-foreground">{chatbot.website_url}</p>
           </div>
-          <Button onClick={handleSave} disabled={isSaving} variant="hero">
+          <Button onClick={handleSave} disabled={isSaving} className="bg-gradient-to-r from-primary to-primary/80">
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
@@ -396,7 +393,7 @@ const ChatbotSettings = () => {
           </motion.div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
