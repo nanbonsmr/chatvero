@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Document {
   id: string;
@@ -27,6 +28,55 @@ export function useDocuments(chatbotId: string | undefined) {
       return data || [];
     },
     enabled: !!chatbotId,
+  });
+}
+
+export function useUploadDocument() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ file, chatbotId }: { file: File; chatbotId: string }) => {
+      if (!user) throw new Error("Not authenticated");
+
+      const fileId = crypto.randomUUID();
+      const filePath = `${user.id}/${chatbotId}/${fileId}-${file.name}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from("chatbot-documents")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Create document record
+      const { data: docData, error: docError } = await supabase
+        .from("chatbot_documents")
+        .insert({
+          chatbot_id: chatbotId,
+          file_name: file.name,
+          file_path: filePath,
+          file_type: file.type,
+          file_size: file.size,
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (docError) throw docError;
+
+      // Trigger document parsing in background
+      supabase.functions.invoke("parse-document", {
+        body: { documentId: docData.id, chatbotId },
+      }).catch((err) => {
+        console.error("Parse document error:", err);
+      });
+
+      return docData;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["documents", variables.chatbotId] });
+    },
   });
 }
 
