@@ -306,7 +306,10 @@ const Dashboard = () => {
                             <Globe className="w-4 h-4 mr-2" />
                             {crawlingBotId === bot.id ? "Crawling..." : "Crawl Website"}
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Edit Settings</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/chatbot/${bot.id}/settings`)}>
+                            <Settings className="w-4 h-4 mr-2" />
+                            Edit Settings
+                          </DropdownMenuItem>
                           <DropdownMenuItem>View Analytics</DropdownMenuItem>
                           <DropdownMenuItem>Chat History</DropdownMenuItem>
                           <AlertDialog>
