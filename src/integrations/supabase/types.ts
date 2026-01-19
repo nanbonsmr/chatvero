@@ -58,6 +58,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          category: string | null
           chatbot_id: string
           ended_at: string | null
           id: string
@@ -67,6 +68,7 @@ export type Database = {
           visitor_id: string
         }
         Insert: {
+          category?: string | null
           chatbot_id: string
           ended_at?: string | null
           id?: string
@@ -76,6 +78,7 @@ export type Database = {
           visitor_id: string
         }
         Update: {
+          category?: string | null
           chatbot_id?: string
           ended_at?: string | null
           id?: string
