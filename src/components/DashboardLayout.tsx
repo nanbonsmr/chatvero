@@ -39,6 +39,7 @@ import {
   Sparkles,
   Bot,
   Menu,
+  FileText,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -51,6 +52,7 @@ const navItems = [
   { title: "Leads", path: "/leads", icon: Users },
   { title: "Analytics", path: "/analytics", icon: BarChart3 },
   { title: "Knowledge Base", path: "/knowledge", icon: Database },
+  { title: "Documents", path: "/documents", icon: FileText },
   { title: "Settings", path: "/settings", icon: Settings },
 ];
 
