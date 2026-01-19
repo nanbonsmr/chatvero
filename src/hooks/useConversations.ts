@@ -1,7 +1,8 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface Conversation {
   id: string;
@@ -12,6 +13,7 @@ interface Conversation {
   page_url: string | null;
   user_agent: string | null;
   category: string;
+  archived_at: string | null;
   chatbot_name?: string;
   message_count?: number;
   last_message?: string;
@@ -60,6 +62,7 @@ export function useConversations(chatbotId?: string) {
         page_url: conv.page_url,
         user_agent: conv.user_agent,
         category: conv.category || "general",
+        archived_at: conv.archived_at,
         chatbot_name: conv.chatbots?.name,
         message_count: conv.messages?.length || 0,
         last_message: conv.messages?.sort((a: any, b: any) => 
@@ -182,4 +185,79 @@ export function useConversationMessages(conversationId: string | null) {
   }, [conversationId, queryClient]);
 
   return queryResult;
+}
+
+export function useArchiveConversation() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ conversationId, archive }: { conversationId: string; archive: boolean }) => {
+      const { error } = await supabase
+        .from("conversations")
+        .update({ archived_at: archive ? new Date().toISOString() : null })
+        .eq("id", conversationId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, { archive }) => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      toast({
+        title: archive ? "Conversation archived" : "Conversation restored",
+        description: archive 
+          ? "The conversation has been moved to archives" 
+          : "The conversation has been restored",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update conversation",
+        variant: "destructive",
+      });
+      console.error("Archive error:", error);
+    },
+  });
+}
+
+export function useDeleteConversation() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (conversationId: string) => {
+      // First delete messages
+      const { error: messagesError } = await supabase
+        .from("messages")
+        .delete()
+        .eq("conversation_id", conversationId);
+
+      if (messagesError) throw messagesError;
+
+      // Then delete the conversation
+      const { error } = await supabase
+        .from("conversations")
+        .delete()
+        .eq("id", conversationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      toast({
+        title: "Conversation deleted",
+        description: "The conversation and all its messages have been permanently deleted",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete conversation",
+        variant: "destructive",
+      });
+      console.error("Delete error:", error);
+    },
+  });
 }
