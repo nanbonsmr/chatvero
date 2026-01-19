@@ -100,27 +100,27 @@ const Dashboard = () => {
         </div>
 
         <nav className="space-y-2">
-          <a
-            href="#"
+          <Link
+            to="/dashboard"
             className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium"
           >
             <BarChart3 className="w-5 h-5" />
             Dashboard
-          </a>
-          <a
-            href="#"
+          </Link>
+          <Link
+            to="/dashboard"
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors"
           >
             <MessageSquare className="w-5 h-5" />
             Chatbots
-          </a>
-          <a
-            href="#"
+          </Link>
+          <Link
+            to="/leads"
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors"
           >
             <Users className="w-5 h-5" />
             Leads
-          </a>
+          </Link>
           <a
             href="#"
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors"
