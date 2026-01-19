@@ -10,9 +10,13 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import CreateChatbot from "./pages/CreateChatbot";
+import ChatbotOverview from "./pages/ChatbotOverview";
 import ChatbotSettings from "./pages/ChatbotSettings";
-import Conversations from "./pages/Conversations";
+import ChatbotConversations from "./pages/ChatbotConversations";
+import ChatbotLeads from "./pages/ChatbotLeads";
+import ChatbotAnalytics from "./pages/ChatbotAnalytics";
 import CrawledPages from "./pages/CrawledPages";
+import Conversations from "./pages/Conversations";
 import Analytics from "./pages/Analytics";
 import Leads from "./pages/Leads";
 import NotFound from "./pages/NotFound";
@@ -31,42 +35,18 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/create-chatbot" element={
-                <ProtectedRoute>
-                  <CreateChatbot />
-                </ProtectedRoute>
-              } />
-              <Route path="/leads" element={
-                <ProtectedRoute>
-                  <Leads />
-                </ProtectedRoute>
-              } />
-              <Route path="/chatbot/:id/settings" element={
-                <ProtectedRoute>
-                  <ChatbotSettings />
-                </ProtectedRoute>
-              } />
-              <Route path="/conversations" element={
-                <ProtectedRoute>
-                  <Conversations />
-                </ProtectedRoute>
-              } />
-              <Route path="/chatbot/:id/knowledge" element={
-                <ProtectedRoute>
-                  <CrawledPages />
-                </ProtectedRoute>
-              } />
-              <Route path="/analytics" element={
-                <ProtectedRoute>
-                  <Analytics />
-                </ProtectedRoute>
-              } />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/create-chatbot" element={<ProtectedRoute><CreateChatbot /></ProtectedRoute>} />
+              <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
+              <Route path="/conversations" element={<ProtectedRoute><Conversations /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              {/* Chatbot-specific routes */}
+              <Route path="/chatbot/:id" element={<ProtectedRoute><ChatbotOverview /></ProtectedRoute>} />
+              <Route path="/chatbot/:id/settings" element={<ProtectedRoute><ChatbotSettings /></ProtectedRoute>} />
+              <Route path="/chatbot/:id/conversations" element={<ProtectedRoute><ChatbotConversations /></ProtectedRoute>} />
+              <Route path="/chatbot/:id/leads" element={<ProtectedRoute><ChatbotLeads /></ProtectedRoute>} />
+              <Route path="/chatbot/:id/analytics" element={<ProtectedRoute><ChatbotAnalytics /></ProtectedRoute>} />
+              <Route path="/chatbot/:id/knowledge" element={<ProtectedRoute><CrawledPages /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
