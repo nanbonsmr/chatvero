@@ -50,7 +50,7 @@ const Dashboard = () => {
   };
 
   const copyEmbedCode = (botId: string) => {
-    const code = `<script src="https://embedai.dev/widget.js" data-bot-id="${botId}"></script>`;
+    const code = `<script src="https://czhltxnpaukjqmtgrgzc.supabase.co/functions/v1/widget?bot=${botId}"></script>`;
     navigator.clipboard.writeText(code);
     toast({
       title: "Copied!",
