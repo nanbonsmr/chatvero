@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -17,7 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useDocuments, useDeleteDocument, useReprocessDocument } from "@/hooks/useDocuments";
+import { useDocuments, useDeleteDocument, useReprocessDocument, useUploadDocument } from "@/hooks/useDocuments";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -35,7 +35,20 @@ import {
   XCircle,
   Clock,
   HardDrive,
+  Upload,
+  Plus,
 } from "lucide-react";
+
+const ACCEPTED_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
+  "text/plain",
+];
 
 const getFileIcon = (fileType: string) => {
   if (fileType.includes("pdf")) return <FileText className="w-5 h-5 text-red-500" />;
@@ -89,6 +102,9 @@ const ChatbotDocuments = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: chatbot } = useQuery({
     queryKey: ["chatbot", chatbotId],
@@ -107,12 +123,86 @@ const ChatbotDocuments = () => {
   const { data: documents = [], isLoading } = useDocuments(chatbotId);
   const deleteDocument = useDeleteDocument();
   const reprocessDocument = useReprocessDocument();
+  const uploadDocument = useUploadDocument();
 
   const filteredDocuments = documents.filter((doc) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return doc.file_name.toLowerCase().includes(query);
   });
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  }, [chatbotId]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      handleFiles(files);
+    }
+  };
+
+  const handleFiles = async (files: File[]) => {
+    if (!chatbotId) return;
+    
+    const validFiles = files.filter(file => {
+      const isValidType = ACCEPTED_TYPES.includes(file.type);
+      const isValidSize = file.size <= 20 * 1024 * 1024; // 20MB max
+      if (!isValidType) {
+        toast({
+          title: "Invalid file type",
+          description: `${file.name} is not a supported format`,
+          variant: "destructive",
+        });
+      }
+      if (!isValidSize) {
+        toast({
+          title: "File too large",
+          description: `${file.name} exceeds 20MB limit`,
+          variant: "destructive",
+        });
+      }
+      return isValidType && isValidSize;
+    });
+
+    if (validFiles.length === 0) return;
+
+    setIsUploading(true);
+    
+    for (const file of validFiles) {
+      try {
+        await uploadDocument.mutateAsync({ file, chatbotId });
+        toast({
+          title: "Uploaded",
+          description: `${file.name} is being processed`,
+        });
+      } catch {
+        toast({
+          title: "Upload failed",
+          description: `Failed to upload ${file.name}`,
+          variant: "destructive",
+        });
+      }
+    }
+    
+    setIsUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleDelete = async (documentId: string) => {
     if (!chatbotId) return;
@@ -166,6 +256,56 @@ const ChatbotDocuments = () => {
             {chatbot?.name || "Chatbot"} - Uploaded Documents
           </p>
         </div>
+
+        {/* Upload Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`
+              relative border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer
+              ${isDragging 
+                ? "border-primary bg-primary/5" 
+                : "border-border hover:border-primary/50 hover:bg-secondary/30"
+              }
+            `}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            
+            <div className="flex flex-col items-center gap-3">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${
+                isDragging ? "bg-primary/20" : "bg-secondary"
+              }`}>
+                {isUploading ? (
+                  <Loader2 className="w-7 h-7 text-primary animate-spin" />
+                ) : (
+                  <Upload className={`w-7 h-7 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
+                )}
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">
+                  {isUploading ? "Uploading..." : isDragging ? "Drop files here" : "Upload Documents"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Drag & drop or click to browse. PDF, DOCX, PPTX, XLSX, TXT (max 20MB)
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Search */}
         <div className="relative mb-6">
