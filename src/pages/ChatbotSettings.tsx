@@ -24,7 +24,10 @@ import {
   Globe,
   Sparkles,
   Database,
-  ChevronRight
+  ChevronRight,
+  Code,
+  Copy,
+  Check
 } from "lucide-react";
 
 const tones = [
@@ -59,6 +62,19 @@ const ChatbotSettings = () => {
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const embedCode = `<script src="https://czhltxnpaukjqmtgrgzc.supabase.co/functions/v1/widget?bot=${id}"></script>`;
+
+  const copyEmbedCode = () => {
+    navigator.clipboard.writeText(embedCode);
+    setCopied(true);
+    toast({
+      title: "Copied!",
+      description: "Embed code copied to clipboard",
+    });
+    setTimeout(() => setCopied(false), 2000);
+  };
   const [chatbot, setChatbot] = useState<{
     name: string;
     website_url: string;
@@ -193,6 +209,46 @@ const ChatbotSettings = () => {
                 onCheckedChange={(checked) => setChatbot({ ...chatbot, is_active: checked })}
               />
             </div>
+          </motion.div>
+
+          {/* Embed Code */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="bg-card rounded-2xl border border-border p-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Code className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-semibold">Embed Code</h2>
+                <p className="text-sm text-muted-foreground">Add this to your website</p>
+              </div>
+            </div>
+
+            <div className="bg-secondary/50 rounded-xl p-4 font-mono text-sm break-all mb-4">
+              {embedCode}
+            </div>
+
+            <Button onClick={copyEmbedCode} variant="outline" className="w-full">
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-green-500" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  Copy Embed Code
+                </>
+              )}
+            </Button>
+
+            <p className="text-xs text-muted-foreground mt-3">
+              Paste this code before the closing &lt;/body&gt; tag on your website
+            </p>
           </motion.div>
 
           {/* Knowledge Base Link */}
