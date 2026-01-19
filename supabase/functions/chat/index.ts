@@ -13,7 +13,56 @@ interface ChatRequest {
   visitor_id: string;
 }
 
-// Simple keyword extraction for matching
+// Simple embedding function matching the generate-embedding function
+function generateSimpleEmbedding(text: string): number[] {
+  const normalizedText = text.toLowerCase().trim();
+  const embedding = new Array(384).fill(0);
+  
+  const ngrams: string[] = [];
+  
+  for (let i = 0; i < normalizedText.length; i++) {
+    ngrams.push(normalizedText[i]);
+  }
+  for (let i = 0; i < normalizedText.length - 1; i++) {
+    ngrams.push(normalizedText.slice(i, i + 2));
+  }
+  for (let i = 0; i < normalizedText.length - 2; i++) {
+    ngrams.push(normalizedText.slice(i, i + 3));
+  }
+  
+  const words = normalizedText.split(/\s+/).filter(w => w.length > 0);
+  for (const word of words) {
+    ngrams.push(`w_${word}`);
+    if (word.length > 3) {
+      ngrams.push(`p_${word.slice(0, 3)}`);
+      ngrams.push(`s_${word.slice(-3)}`);
+    }
+  }
+  
+  for (const ngram of ngrams) {
+    let hash1 = 0;
+    let hash2 = 0;
+    for (let i = 0; i < ngram.length; i++) {
+      hash1 = (hash1 * 31 + ngram.charCodeAt(i)) >>> 0;
+      hash2 = (hash2 * 37 + ngram.charCodeAt(i)) >>> 0;
+    }
+    
+    embedding[hash1 % 384] += 1;
+    embedding[hash2 % 384] += 0.5;
+    embedding[(hash1 + hash2) % 384] += 0.25;
+  }
+  
+  const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
+  if (magnitude > 0) {
+    for (let i = 0; i < embedding.length; i++) {
+      embedding[i] = embedding[i] / magnitude;
+    }
+  }
+  
+  return embedding;
+}
+
+// Fallback keyword matching for chunks without embeddings
 function extractKeywords(text: string): string[] {
   const stopWords = new Set([
     "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
@@ -37,19 +86,13 @@ function extractKeywords(text: string): string[] {
     .filter(word => word.length > 2 && !stopWords.has(word));
 }
 
-// Score chunks based on keyword overlap
 function scoreChunk(chunkContent: string, keywords: string[]): number {
   const chunkWords = new Set(chunkContent.toLowerCase().split(/\s+/));
   let score = 0;
   for (const keyword of keywords) {
-    if (chunkWords.has(keyword)) {
-      score += 1;
-    }
-    // Partial match bonus
+    if (chunkWords.has(keyword)) score += 1;
     for (const word of chunkWords) {
-      if (word.includes(keyword) || keyword.includes(word)) {
-        score += 0.5;
-      }
+      if (word.includes(keyword) || keyword.includes(word)) score += 0.5;
     }
   }
   return score;
@@ -139,40 +182,63 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: true })
       .limit(20);
 
-    // Extract keywords from the user's message for relevance matching
-    const keywords = extractKeywords(message);
-    console.log(`Extracted keywords: ${keywords.join(", ")}`);
+    // Generate embedding for user message for semantic search
+    const queryEmbedding = generateSimpleEmbedding(message);
+    console.log("Generated query embedding for semantic search");
 
-    // Retrieve knowledge chunks for this chatbot
-    const { data: chunks, error: chunksError } = await supabase
-      .from("chatbot_chunks")
-      .select("content, metadata, source_type")
-      .eq("chatbot_id", chatbot_id)
-      .limit(100);
+    // Try semantic search first using the match_chunks function
+    let relevantContext = "";
+    let usedSemanticSearch = false;
+    
+    try {
+      const { data: semanticChunks, error: semanticError } = await supabase.rpc("match_chunks", {
+        query_embedding: `[${queryEmbedding.join(",")}]`,
+        match_chatbot_id: chatbot_id,
+        match_threshold: 0.3,
+        match_count: 5,
+      });
 
-    if (chunksError) {
-      console.error("Error fetching chunks:", chunksError);
+      if (!semanticError && semanticChunks && semanticChunks.length > 0) {
+        usedSemanticSearch = true;
+        console.log(`Semantic search found ${semanticChunks.length} relevant chunks`);
+        
+        relevantContext = "\n\n### Relevant Knowledge Base Information:\n\n";
+        for (const chunk of semanticChunks) {
+          const source = chunk.source_url || chunk.source_type || "document";
+          relevantContext += `[Source: ${source}, Relevance: ${(chunk.similarity * 100).toFixed(0)}%]\n${chunk.content}\n\n---\n\n`;
+        }
+      } else if (semanticError) {
+        console.log("Semantic search error, falling back to keyword search:", semanticError.message);
+      }
+    } catch (err) {
+      console.log("Semantic search failed, using keyword fallback:", err);
     }
 
-    // Score and rank chunks by relevance
-    let relevantContext = "";
-    if (chunks && chunks.length > 0 && keywords.length > 0) {
-      const scoredChunks = chunks
-        .map(chunk => ({
-          ...chunk,
-          score: scoreChunk(chunk.content, keywords),
-        }))
-        .filter(chunk => chunk.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5); // Top 5 most relevant chunks
+    // Fallback to keyword search if semantic search didn't find results
+    if (!usedSemanticSearch) {
+      const keywords = extractKeywords(message);
+      console.log(`Falling back to keyword search with: ${keywords.join(", ")}`);
 
-      console.log(`Found ${scoredChunks.length} relevant chunks out of ${chunks.length} total`);
+      const { data: chunks } = await supabase
+        .from("chatbot_chunks")
+        .select("content, metadata, source_type")
+        .eq("chatbot_id", chatbot_id)
+        .limit(100);
 
-      if (scoredChunks.length > 0) {
-        relevantContext = "\n\n### Relevant Knowledge Base Information:\n\n";
-        for (const chunk of scoredChunks) {
-          const source = chunk.metadata?.file_name || chunk.source_type || "document";
-          relevantContext += `[Source: ${source}]\n${chunk.content}\n\n---\n\n`;
+      if (chunks && chunks.length > 0 && keywords.length > 0) {
+        const scoredChunks = chunks
+          .map(chunk => ({ ...chunk, score: scoreChunk(chunk.content, keywords) }))
+          .filter(chunk => chunk.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5);
+
+        if (scoredChunks.length > 0) {
+          console.log(`Keyword search found ${scoredChunks.length} relevant chunks`);
+          relevantContext = "\n\n### Relevant Knowledge Base Information:\n\n";
+          for (const chunk of scoredChunks) {
+            const source = chunk.metadata?.file_name || chunk.source_type || "document";
+            relevantContext += `[Source: ${source}]\n${chunk.content}\n\n---\n\n`;
+          }
         }
       }
     }
@@ -186,11 +252,14 @@ Deno.serve(async (req) => {
 
     let websiteContext = "";
     if (crawledPages && crawledPages.length > 0) {
+      // Extract keywords for scoring crawled pages
+      const pageKeywords = extractKeywords(message);
+      
       // Score crawled pages too
       const scoredPages = crawledPages
         .map(page => ({
           ...page,
-          score: scoreChunk(page.content, keywords),
+          score: scoreChunk(page.content, pageKeywords),
         }))
         .filter(page => page.score > 0)
         .sort((a, b) => b.score - a.score)
