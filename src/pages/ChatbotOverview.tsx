@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   AreaChart,
   Area,
@@ -26,6 +26,9 @@ import {
   Loader2,
   ArrowUpRight,
   Zap,
+  Clock,
+  User,
+  MessageSquare,
 } from "lucide-react";
 
 const ChatbotOverview = () => {
@@ -227,45 +230,69 @@ const ChatbotOverview = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="rounded-2xl border border-border/50 bg-card p-6"
+            className="rounded-2xl border border-border/50 bg-card p-4 sm:p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-lg font-semibold">Recent Chats</h2>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                </div>
+                <h2 className="font-display text-lg font-semibold">Recent Chats</h2>
+              </div>
               <Link to={`/chatbot/${id}/conversations`}>
-                <Button variant="ghost" size="sm">View All</Button>
+                <Button variant="outline" size="sm" className="gap-1">
+                  View All
+                  <ArrowUpRight className="w-3 h-3" />
+                </Button>
               </Link>
             </div>
-            <div className="space-y-3">
-              {recentConversations.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No conversations yet
-                </p>
-              ) : (
-                recentConversations.map((conv) => (
+            
+            {recentConversations.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
+                  <MessageSquare className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">No conversations yet</p>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                {recentConversations.map((conv) => (
                   <div
                     key={conv.id}
-                    className="p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer"
+                    className="group flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/60 transition-all cursor-pointer border border-transparent hover:border-border/50"
                     onClick={() => navigate(`/chatbot/${id}/conversations`)}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium truncate">
-                        {conv.visitor_id.substring(0, 12)}...
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {conv.message_count} msgs
-                      </span>
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-primary" />
                     </div>
-                    {conv.last_message && (
-                      <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                        {conv.last_message.length > 50 
-                          ? `${conv.last_message.substring(0, 50)}...` 
-                          : conv.last_message}
-                      </p>
-                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium truncate">
+                          {conv.visitor_id.substring(0, 8)}...
+                        </span>
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground flex-shrink-0">
+                          <Clock className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(conv.started_at), { addSuffix: true })}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <p className="text-xs text-muted-foreground truncate">
+                          {conv.last_message 
+                            ? conv.last_message.length > 40 
+                              ? `${conv.last_message.substring(0, 40)}...` 
+                              : conv.last_message
+                            : "No messages"
+                          }
+                        </p>
+                        <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded flex-shrink-0">
+                          {conv.message_count} msgs
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
 
