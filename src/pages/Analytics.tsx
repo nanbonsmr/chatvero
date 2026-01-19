@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import {
@@ -16,7 +15,6 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -26,8 +24,8 @@ import {
 } from "@/components/ui/select";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useChatbots } from "@/hooks/useChatbots";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
-  ArrowLeft,
   Loader2,
   MessageCircle,
   Users,
@@ -53,51 +51,41 @@ const Analytics = () => {
       label: "Total Conversations",
       value: analytics?.totals.totalConversations || 0,
       icon: MessageCircle,
-      color: "text-blue-500",
-      bg: "bg-blue-500/10",
+      gradient: "from-blue-500 to-cyan-500",
     },
     {
       label: "Leads Captured",
       value: analytics?.totals.totalLeads || 0,
       icon: Users,
-      color: "text-green-500",
-      bg: "bg-green-500/10",
+      gradient: "from-green-500 to-emerald-500",
     },
     {
       label: "Total Messages",
       value: analytics?.totals.totalMessages || 0,
       icon: Activity,
-      color: "text-purple-500",
-      bg: "bg-purple-500/10",
+      gradient: "from-purple-500 to-violet-500",
     },
     {
       label: "Conversion Rate",
       value: `${analytics?.totals.conversionRate || 0}%`,
       icon: TrendingUp,
-      color: "text-orange-500",
-      bg: "bg-orange-500/10",
+      gradient: "from-orange-500 to-amber-500",
     },
   ];
 
-  // Format daily stats for charts
   const chartData = analytics?.dailyStats.map((stat) => ({
     ...stat,
     dateLabel: format(new Date(stat.date), "MMM d"),
   })) || [];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <DashboardLayout>
+      <div className="p-6 lg:p-8 space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-          <Link to="/dashboard">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div className="flex-1">
-            <h1 className="font-display text-2xl font-bold">Analytics</h1>
-            <p className="text-muted-foreground">Track your chatbot performance</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-bold">Global Analytics</h1>
+            <p className="text-muted-foreground mt-1">Track performance across all chatbots</p>
           </div>
           <div className="flex gap-3">
             <Select value={selectedChatbot} onValueChange={setSelectedChatbot}>
@@ -132,7 +120,7 @@ const Analytics = () => {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="space-y-8">
+          <>
             {/* Stats Cards */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {stats.map((stat, index) => (
@@ -141,17 +129,18 @@ const Analytics = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-card rounded-2xl border border-border p-6"
+                  className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center`}>
-                      <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`} />
+                  <div className="relative">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-4`}>
+                      <stat.icon className="w-6 h-6 text-white" />
                     </div>
+                    <p className="text-3xl font-display font-bold mb-1">
+                      {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
+                    </p>
+                    <p className="text-muted-foreground text-sm">{stat.label}</p>
                   </div>
-                  <p className="text-3xl font-display font-bold mb-1">
-                    {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-                  </p>
-                  <p className="text-muted-foreground text-sm">{stat.label}</p>
                 </motion.div>
               ))}
             </div>
@@ -163,11 +152,11 @@ const Analytics = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-card rounded-2xl border border-border p-6"
+                className="rounded-2xl border border-border/50 bg-card p-6"
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <MessageCircle className="w-5 h-5 text-blue-500" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-white" />
                   </div>
                   <h2 className="font-display text-lg font-semibold">Conversations Over Time</h2>
                 </div>
@@ -176,20 +165,13 @@ const Analytics = () => {
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="colorConv" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis 
-                        dataKey="dateLabel" 
-                        className="text-xs fill-muted-foreground"
-                        tick={{ fontSize: 12 }}
-                      />
-                      <YAxis 
-                        className="text-xs fill-muted-foreground"
-                        tick={{ fontSize: 12 }}
-                      />
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                      <XAxis dataKey="dateLabel" className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
+                      <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "hsl(var(--card))",
@@ -200,7 +182,7 @@ const Analytics = () => {
                       <Area
                         type="monotone"
                         dataKey="conversations"
-                        stroke="#6366f1"
+                        stroke="#3b82f6"
                         strokeWidth={2}
                         fill="url(#colorConv)"
                       />
@@ -214,27 +196,20 @@ const Analytics = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-card rounded-2xl border border-border p-6"
+                className="rounded-2xl border border-border/50 bg-card p-6"
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-green-500" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-white" />
                   </div>
                   <h2 className="font-display text-lg font-semibold">Leads Captured</h2>
                 </div>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis 
-                        dataKey="dateLabel" 
-                        className="text-xs fill-muted-foreground"
-                        tick={{ fontSize: 12 }}
-                      />
-                      <YAxis 
-                        className="text-xs fill-muted-foreground"
-                        tick={{ fontSize: 12 }}
-                      />
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                      <XAxis dataKey="dateLabel" className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
+                      <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "hsl(var(--card))",
@@ -256,11 +231,11 @@ const Analytics = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="bg-card rounded-2xl border border-border p-6"
+                  className="rounded-2xl border border-border/50 bg-card p-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <BarChart3 className="w-5 h-5 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-white" />
                     </div>
                     <h2 className="font-display text-lg font-semibold">Conversations by Chatbot</h2>
                   </div>
@@ -308,11 +283,11 @@ const Analytics = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
-                  className="bg-card rounded-2xl border border-border p-6"
+                  className="rounded-2xl border border-border/50 bg-card p-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-white" />
                     </div>
                     <h2 className="font-display text-lg font-semibold">Performance by Chatbot</h2>
                   </div>
@@ -346,10 +321,10 @@ const Analytics = () => {
                 </motion.div>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
