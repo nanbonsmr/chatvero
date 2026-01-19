@@ -199,7 +199,7 @@ const CreateChatbot = () => {
         goal,
       });
 
-      // If documents source, upload files to storage
+      // If documents source, upload files to storage and trigger parsing
       if (sourceType === "documents" && uploadedFiles.length > 0 && user) {
         for (const uploadFile of uploadedFiles) {
           const filePath = `${user.id}/${chatbot.id}/${uploadFile.id}-${uploadFile.file.name}`;
@@ -214,14 +214,27 @@ const CreateChatbot = () => {
           }
 
           // Save document record
-          await supabase.from("chatbot_documents").insert({
-            chatbot_id: chatbot.id,
-            file_name: uploadFile.file.name,
-            file_path: filePath,
-            file_type: uploadFile.file.type,
-            file_size: uploadFile.file.size,
-            status: "pending",
-          });
+          const { data: docData, error: docError } = await supabase
+            .from("chatbot_documents")
+            .insert({
+              chatbot_id: chatbot.id,
+              file_name: uploadFile.file.name,
+              file_path: filePath,
+              file_type: uploadFile.file.type,
+              file_size: uploadFile.file.size,
+              status: "pending",
+            })
+            .select()
+            .single();
+
+          // Trigger document parsing in background
+          if (docData && !docError) {
+            supabase.functions.invoke("parse-document", {
+              body: { documentId: docData.id, chatbotId: chatbot.id },
+            }).catch((err) => {
+              console.error("Parse document error:", err);
+            });
+          }
         }
       }
       
