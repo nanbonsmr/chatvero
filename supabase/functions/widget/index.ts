@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
   // Get chatbot settings including new welcome behavior fields
   const { data: chatbot } = await supabase
     .from("chatbots")
-    .select("name, welcome_message, primary_color, is_active, goal, auto_show_welcome, welcome_delay_seconds, follow_up_message")
+    .select("name, welcome_message, primary_color, is_active, goal, auto_show_welcome, welcome_delay_seconds, follow_up_message, logo_url")
     .eq("id", botId)
     .single();
 
@@ -56,6 +56,7 @@ Deno.serve(async (req) => {
     welcomeMessage,
     followUpMessage,
     primaryColor: chatbot.primary_color || "#6366f1",
+    logoUrl: chatbot.logo_url || null,
     goal: chatbot.goal,
     autoShowWelcome: chatbot.auto_show_welcome ?? true,
     welcomeDelaySeconds: chatbot.welcome_delay_seconds ?? 2,
@@ -81,10 +82,11 @@ Deno.serve(async (req) => {
       position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px;
       border-radius: 50%; background: \${CONFIG.primaryColor}; cursor: pointer;
       box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;
-      transition: transform 0.2s, box-shadow 0.2s; z-index: 999999;
+      transition: transform 0.2s, box-shadow 0.2s; z-index: 999999; overflow: hidden;
     }
     #embedai-bubble:hover { transform: scale(1.05); box-shadow: 0 6px 25px rgba(0,0,0,0.25); }
     #embedai-bubble svg { width: 28px; height: 28px; fill: white; }
+    #embedai-bubble img { width: 100%; height: 100%; object-fit: cover; }
     #embedai-bubble-badge {
       position: absolute; top: -2px; right: -2px; width: 18px; height: 18px;
       background: #ef4444; border-radius: 50%; border: 2px solid white;
@@ -121,8 +123,12 @@ Deno.serve(async (req) => {
       background: \${CONFIG.primaryColor}; color: white; padding: 16px 20px;
       display: flex; align-items: center; gap: 12px;
     }
-    #embedai-header-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    #embedai-header-icon { 
+      width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; 
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
     #embedai-header-icon svg { width: 22px; height: 22px; fill: white; }
+    #embedai-header-icon img { width: 100%; height: 100%; object-fit: cover; }
     #embedai-header-text h3 { margin: 0 0 2px 0; font-size: 16px; font-weight: 600; }
     #embedai-header-text p { margin: 0; font-size: 12px; opacity: 0.9; }
     #embedai-close { background: none; border: none; color: white; cursor: pointer; margin-left: auto; padding: 4px; opacity: 0.8; }
@@ -156,6 +162,16 @@ Deno.serve(async (req) => {
   // Create widget
   const widget = document.createElement('div');
   widget.id = 'embedai-widget';
+  
+  // Conditionally render logo or default icon
+  const bubbleContent = CONFIG.logoUrl 
+    ? \`<img src="\${CONFIG.logoUrl}" alt="\${CONFIG.name}" />\`
+    : \`<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>\`;
+  
+  const headerIconContent = CONFIG.logoUrl 
+    ? \`<img src="\${CONFIG.logoUrl}" alt="\${CONFIG.name}" />\`
+    : \`<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>\`;
+  
   widget.innerHTML = \`
     <div id="embedai-preview-bubble">
       <button class="close-preview">×</button>
@@ -163,12 +179,12 @@ Deno.serve(async (req) => {
     </div>
     <div id="embedai-bubble">
       <div id="embedai-bubble-badge"></div>
-      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+      \${bubbleContent}
     </div>
     <div id="embedai-chat">
       <div id="embedai-header">
         <div id="embedai-header-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          \${headerIconContent}
         </div>
         <div id="embedai-header-text">
           <h3>\${CONFIG.name}</h3>

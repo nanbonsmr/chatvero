@@ -117,6 +117,7 @@ export type Database = {
           goal: string
           id: string
           is_active: boolean | null
+          logo_url: string | null
           name: string
           primary_color: string | null
           tone: string
@@ -133,6 +134,7 @@ export type Database = {
           goal?: string
           id?: string
           is_active?: boolean | null
+          logo_url?: string | null
           name: string
           primary_color?: string | null
           tone?: string
@@ -149,6 +151,7 @@ export type Database = {
           goal?: string
           id?: string
           is_active?: boolean | null
+          logo_url?: string | null
           name?: string
           primary_color?: string | null
           tone?: string
