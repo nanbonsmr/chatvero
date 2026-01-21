@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, MessageSquare, Sparkles } from "lucide-react";
@@ -8,6 +8,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  
+  // Scroll progress tracking
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,33 +39,39 @@ export const Navbar = () => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled 
           ? "py-2" 
-          : "py-4"
+          : "py-3 sm:py-4"
       }`}
     >
-      <div className={`mx-4 md:mx-8 rounded-2xl transition-all duration-500 ${
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 h-0.5 gradient-primary origin-left z-10"
+        style={{ scaleX }}
+      />
+      
+      <div className={`mx-2 sm:mx-4 md:mx-8 rounded-xl sm:rounded-2xl transition-all duration-500 ${
         scrolled 
           ? "bg-background/80 backdrop-blur-xl shadow-lg shadow-black/[0.03] border border-border/50" 
           : "bg-transparent"
       }`}>
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between h-14">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6">
+          <div className="flex items-center justify-between h-12 sm:h-14">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group">
+            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group">
               <motion.div 
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/25"
+                className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/25"
               >
-                <MessageSquare className="w-5 h-5 text-primary-foreground" />
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
                 <motion.div 
-                  className="absolute -top-1 -right-1"
+                  className="absolute -top-1 -right-1 hidden sm:block"
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
                   <Sparkles className="w-3 h-3 text-accent" />
                 </motion.div>
               </motion.div>
-              <span className="font-display font-bold text-xl tracking-tight">EmbedAI</span>
+              <span className="font-display font-bold text-lg sm:text-xl tracking-tight">EmbedAI</span>
             </Link>
 
             {/* Desktop Nav */}
@@ -116,35 +130,38 @@ export const Navbar = () => {
             </div>
 
             {/* Mobile Menu Button */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2.5 rounded-xl bg-secondary/80 hover:bg-secondary transition-colors"
-            >
-              <AnimatePresence mode="wait">
-                {isOpen ? (
-                  <motion.div
-                    key="close"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <X className="w-5 h-5" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Menu className="w-5 h-5" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
+            <div className="flex md:hidden items-center gap-2">
+              <ThemeToggle />
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsOpen(!isOpen)}
+                className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-secondary/80 hover:bg-secondary transition-colors"
+              >
+                <AnimatePresence mode="wait">
+                  {isOpen ? (
+                    <motion.div
+                      key="close"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <X className="w-5 h-5" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="menu"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Menu className="w-5 h-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
@@ -157,9 +174,9 @@ export const Navbar = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="md:hidden mx-4 mt-2 rounded-2xl bg-background/95 backdrop-blur-xl border border-border/50 shadow-xl overflow-hidden"
+            className="md:hidden mx-2 sm:mx-4 mt-2 rounded-xl sm:rounded-2xl bg-background/95 backdrop-blur-xl border border-border/50 shadow-xl overflow-hidden"
           >
-            <div className="p-4 space-y-1">
+            <div className="p-3 sm:p-4 space-y-1">
               {navLinks.map((link, index) => (
                 <motion.a
                   key={link.name}
@@ -167,22 +184,18 @@ export const Navbar = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="block px-4 py-3 text-foreground hover:bg-secondary/80 rounded-xl transition-colors font-medium"
+                  className="block px-3 sm:px-4 py-2.5 sm:py-3 text-foreground hover:bg-secondary/80 rounded-lg sm:rounded-xl transition-colors font-medium text-sm sm:text-base"
                   onClick={() => setIsOpen(false)}
                 >
                   {link.name}
                 </motion.a>
               ))}
-              <div className="pt-4 mt-4 border-t border-border space-y-3">
-                <div className="flex items-center justify-between px-4">
-                  <span className="text-sm text-muted-foreground">Theme</span>
-                  <ThemeToggle />
-                </div>
+              <div className="pt-3 sm:pt-4 mt-3 sm:mt-4 border-t border-border space-y-2 sm:space-y-3">
                 <Link to="/login" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full justify-center">Log in</Button>
+                  <Button variant="outline" className="w-full justify-center h-10 sm:h-11 text-sm sm:text-base">Log in</Button>
                 </Link>
                 <Link to="/signup" onClick={() => setIsOpen(false)}>
-                  <Button className="w-full justify-center gradient-primary text-primary-foreground shadow-lg shadow-primary/25">
+                  <Button className="w-full justify-center h-10 sm:h-11 text-sm sm:text-base gradient-primary text-primary-foreground shadow-lg shadow-primary/25">
                     Get Started
                   </Button>
                 </Link>
