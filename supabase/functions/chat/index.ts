@@ -13,6 +13,14 @@ interface ChatRequest {
   visitor_id: string;
 }
 
+interface RetrievedContext {
+  content: string;
+  source: string;
+  sourceType: "document" | "website" | "chunk";
+  relevanceScore: number;
+  metadata?: Record<string, unknown>;
+}
+
 // Simple embedding function matching the generate-embedding function
 function generateSimpleEmbedding(text: string): number[] {
   const normalizedText = text.toLowerCase().trim();
@@ -62,8 +70,8 @@ function generateSimpleEmbedding(text: string): number[] {
   return embedding;
 }
 
-// Fallback keyword matching for chunks without embeddings
-function extractKeywords(text: string): string[] {
+// Enhanced keyword extraction with stemming-like behavior
+function extractKeywords(text: string): { keywords: string[]; phrases: string[] } {
   const stopWords = new Set([
     "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
     "have", "has", "had", "do", "does", "did", "will", "would", "could",
@@ -77,25 +85,99 @@ function extractKeywords(text: string): string[] {
     "these", "those", "what", "which", "who", "whom", "i", "you", "he", "she",
     "it", "we", "they", "me", "him", "her", "us", "them", "my", "your", "his",
     "its", "our", "their", "am", "please", "thanks", "thank", "hi", "hello",
+    "want", "need", "tell", "know", "like", "get", "give", "take", "make",
   ]);
 
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
-    .split(/\s+/)
-    .filter(word => word.length > 2 && !stopWords.has(word));
-}
-
-function scoreChunk(chunkContent: string, keywords: string[]): number {
-  const chunkWords = new Set(chunkContent.toLowerCase().split(/\s+/));
-  let score = 0;
-  for (const keyword of keywords) {
-    if (chunkWords.has(keyword)) score += 1;
-    for (const word of chunkWords) {
-      if (word.includes(keyword) || keyword.includes(word)) score += 0.5;
+  const cleanText = text.toLowerCase().replace(/[^\w\s]/g, " ");
+  const words = cleanText.split(/\s+/).filter(w => w.length > 2);
+  
+  // Extract individual keywords
+  const keywords = words.filter(word => !stopWords.has(word));
+  
+  // Extract meaningful phrases (2-3 word combinations)
+  const phrases: string[] = [];
+  for (let i = 0; i < words.length - 1; i++) {
+    if (!stopWords.has(words[i]) && !stopWords.has(words[i + 1])) {
+      phrases.push(`${words[i]} ${words[i + 1]}`);
+    }
+    if (i < words.length - 2 && !stopWords.has(words[i]) && !stopWords.has(words[i + 2])) {
+      phrases.push(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
     }
   }
+
+  return { keywords: [...new Set(keywords)], phrases: [...new Set(phrases)] };
+}
+
+// Advanced scoring for chunks with multiple factors
+function scoreChunk(
+  chunkContent: string, 
+  keywords: string[], 
+  phrases: string[],
+  queryLength: number
+): number {
+  const lowerContent = chunkContent.toLowerCase();
+  const contentWords = new Set(lowerContent.split(/\s+/));
+  
+  let score = 0;
+  
+  // Exact phrase matches (highest weight)
+  for (const phrase of phrases) {
+    if (lowerContent.includes(phrase)) {
+      score += 5;
+    }
+  }
+  
+  // Keyword matches
+  for (const keyword of keywords) {
+    if (contentWords.has(keyword)) {
+      score += 2;
+    } else {
+      // Partial match (word contains keyword or vice versa)
+      for (const word of contentWords) {
+        if (word.includes(keyword) || keyword.includes(word)) {
+          score += 0.5;
+        }
+      }
+    }
+  }
+  
+  // Boost for keyword density
+  const keywordCount = keywords.filter(k => contentWords.has(k)).length;
+  const density = keywordCount / Math.max(keywords.length, 1);
+  score += density * 3;
+  
+  // Boost for content that's appropriately sized (not too short)
+  if (chunkContent.length > 200) {
+    score += 1;
+  }
+  
   return score;
+}
+
+// Detect question intent
+function detectIntent(message: string): string {
+  const lower = message.toLowerCase();
+  
+  if (lower.match(/\b(price|pricing|cost|how much|subscription|plan)\b/)) {
+    return "pricing";
+  }
+  if (lower.match(/\b(feature|can you|does it|support|capability|able to)\b/)) {
+    return "features";
+  }
+  if (lower.match(/\b(how to|how do|guide|tutorial|step|setup|install|configure)\b/)) {
+    return "how-to";
+  }
+  if (lower.match(/\b(contact|email|phone|reach|support|help)\b/)) {
+    return "contact";
+  }
+  if (lower.match(/\b(who|about|company|team|founded)\b/)) {
+    return "about";
+  }
+  if (lower.match(/\b(problem|issue|error|not working|broken|fix|trouble)\b/)) {
+    return "troubleshooting";
+  }
+  
+  return "general";
 }
 
 Deno.serve(async (req) => {
@@ -119,6 +201,9 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Chat request for chatbot: ${chatbot_id}, message: "${message.substring(0, 50)}..."`);
+    
+    const intent = detectIntent(message);
+    console.log(`Detected intent: ${intent}`);
 
     // Get chatbot settings
     const { data: chatbot, error: chatbotError } = await supabase
@@ -182,129 +267,207 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: true })
       .limit(20);
 
-    // Generate embedding for user message for semantic search
+    // Generate embedding for semantic search
     const queryEmbedding = generateSimpleEmbedding(message);
-    console.log("Generated query embedding for semantic search");
-
-    // Try semantic search first using the match_chunks function
-    let relevantContext = "";
-    let usedSemanticSearch = false;
+    const { keywords, phrases } = extractKeywords(message);
     
+    console.log(`Keywords: ${keywords.slice(0, 5).join(", ")}, Phrases: ${phrases.slice(0, 3).join(", ")}`);
+
+    // Collect all context from multiple sources
+    const retrievedContexts: RetrievedContext[] = [];
+
+    // 1. Semantic search on document chunks
     try {
       const { data: semanticChunks, error: semanticError } = await supabase.rpc("match_chunks", {
         query_embedding: `[${queryEmbedding.join(",")}]`,
         match_chatbot_id: chatbot_id,
-        match_threshold: 0.3,
-        match_count: 5,
+        match_threshold: 0.25,
+        match_count: 8,
       });
 
       if (!semanticError && semanticChunks && semanticChunks.length > 0) {
-        usedSemanticSearch = true;
-        console.log(`Semantic search found ${semanticChunks.length} relevant chunks`);
+        console.log(`Semantic search found ${semanticChunks.length} chunks`);
         
-        relevantContext = "\n\n### Relevant Knowledge Base Information:\n\n";
         for (const chunk of semanticChunks) {
-          const source = chunk.source_url || chunk.source_type || "document";
-          relevantContext += `[Source: ${source}, Relevance: ${(chunk.similarity * 100).toFixed(0)}%]\n${chunk.content}\n\n---\n\n`;
+          retrievedContexts.push({
+            content: chunk.content,
+            source: chunk.metadata?.file_name || chunk.source_url || "Document",
+            sourceType: chunk.source_type === "website" ? "website" : "document",
+            relevanceScore: chunk.similarity,
+            metadata: chunk.metadata,
+          });
         }
       } else if (semanticError) {
-        console.log("Semantic search error, falling back to keyword search:", semanticError.message);
+        console.log("Semantic search error:", semanticError.message);
       }
     } catch (err) {
-      console.log("Semantic search failed, using keyword fallback:", err);
+      console.log("Semantic search failed:", err);
     }
 
-    // Fallback to keyword search if semantic search didn't find results
-    if (!usedSemanticSearch) {
-      const keywords = extractKeywords(message);
-      console.log(`Falling back to keyword search with: ${keywords.join(", ")}`);
-
-      const { data: chunks } = await supabase
+    // 2. Keyword search on chunks (fallback/supplement)
+    if (keywords.length > 0) {
+      const { data: allChunks } = await supabase
         .from("chatbot_chunks")
-        .select("content, metadata, source_type")
+        .select("content, metadata, source_type, source_url")
         .eq("chatbot_id", chatbot_id)
-        .limit(100);
+        .limit(150);
 
-      if (chunks && chunks.length > 0 && keywords.length > 0) {
-        const scoredChunks = chunks
-          .map(chunk => ({ ...chunk, score: scoreChunk(chunk.content, keywords) }))
-          .filter(chunk => chunk.score > 0)
+      if (allChunks && allChunks.length > 0) {
+        const scoredChunks = allChunks
+          .map(chunk => ({
+            ...chunk,
+            score: scoreChunk(chunk.content, keywords, phrases, message.length),
+          }))
+          .filter(chunk => chunk.score > 2)
           .sort((a, b) => b.score - a.score)
           .slice(0, 5);
 
-        if (scoredChunks.length > 0) {
-          console.log(`Keyword search found ${scoredChunks.length} relevant chunks`);
-          relevantContext = "\n\n### Relevant Knowledge Base Information:\n\n";
-          for (const chunk of scoredChunks) {
-            const source = chunk.metadata?.file_name || chunk.source_type || "document";
-            relevantContext += `[Source: ${source}]\n${chunk.content}\n\n---\n\n`;
+        for (const chunk of scoredChunks) {
+          // Avoid duplicates
+          const isDuplicate = retrievedContexts.some(ctx => 
+            ctx.content.substring(0, 100) === chunk.content.substring(0, 100)
+          );
+          
+          if (!isDuplicate) {
+            retrievedContexts.push({
+              content: chunk.content,
+              source: chunk.metadata?.file_name || chunk.source_url || "Document",
+              sourceType: chunk.source_type === "website" ? "website" : "document",
+              relevanceScore: chunk.score / 10, // Normalize to 0-1 range
+              metadata: chunk.metadata,
+            });
           }
         }
+        console.log(`Keyword search added ${scoredChunks.length} chunks`);
       }
     }
 
-    // Also get crawled website content as fallback/additional context
+    // 3. Search crawled website pages
     const { data: crawledPages } = await supabase
       .from("crawled_pages")
       .select("url, title, content")
       .eq("chatbot_id", chatbot_id)
-      .limit(3);
+      .limit(50);
 
-    let websiteContext = "";
     if (crawledPages && crawledPages.length > 0) {
-      // Extract keywords for scoring crawled pages
-      const pageKeywords = extractKeywords(message);
-      
-      // Score crawled pages too
       const scoredPages = crawledPages
         .map(page => ({
           ...page,
-          score: scoreChunk(page.content, pageKeywords),
+          score: scoreChunk(page.content, keywords, phrases, message.length),
         }))
-        .filter(page => page.score > 0)
+        .filter(page => page.score > 2)
         .sort((a, b) => b.score - a.score)
-        .slice(0, 2);
+        .slice(0, 3);
 
-      if (scoredPages.length > 0) {
-        websiteContext = "\n\n### Website Information:\n\n";
-        for (const page of scoredPages) {
-          websiteContext += `[${page.title || page.url}]\n${page.content.substring(0, 1500)}\n\n---\n\n`;
+      for (const page of scoredPages) {
+        retrievedContexts.push({
+          content: page.content.substring(0, 2000),
+          source: page.title || page.url,
+          sourceType: "website",
+          relevanceScore: page.score / 10,
+        });
+      }
+      console.log(`Website search added ${scoredPages.length} pages`);
+    }
+
+    // Sort all contexts by relevance and deduplicate
+    const sortedContexts = retrievedContexts
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, 8);
+
+    // Build rich context for the AI
+    let contextSection = "";
+    const sources: string[] = [];
+    
+    if (sortedContexts.length > 0) {
+      contextSection = "\n\n## Knowledge Base Context\n\n";
+      contextSection += "Use the following information to answer the user's question accurately. ";
+      contextSection += "Prioritize information from documents and website content. ";
+      contextSection += "If information conflicts, prefer more specific details over general ones.\n\n";
+      
+      for (const ctx of sortedContexts) {
+        const sourceLabel = ctx.sourceType === "website" ? "🌐 Website" : "📄 Document";
+        const confidenceLabel = ctx.relevanceScore > 0.5 ? "HIGH" : ctx.relevanceScore > 0.3 ? "MEDIUM" : "LOW";
+        
+        contextSection += `### ${sourceLabel}: ${ctx.source} [Relevance: ${confidenceLabel}]\n`;
+        contextSection += `${ctx.content}\n\n---\n\n`;
+        
+        if (!sources.includes(ctx.source)) {
+          sources.push(ctx.source);
         }
       }
     }
 
-    // Combine contexts
-    const combinedContext = relevantContext + websiteContext;
-    const hasContext = combinedContext.trim().length > 0;
+    const hasContext = sortedContexts.length > 0;
+    console.log(`Total context items: ${sortedContexts.length}, Sources: ${sources.length}`);
 
-    // Build system prompt based on chatbot settings
+    // Build advanced system prompt
     const toneDescriptions: Record<string, string> = {
-      professional: "formal, business-focused, and professional",
-      friendly: "warm, conversational, and approachable",
-      sales: "persuasive, enthusiastic, and action-oriented",
+      professional: "formal, business-focused, and professional. Use clear language and maintain a respectful tone.",
+      friendly: "warm, conversational, and approachable. Be personable while remaining helpful.",
+      sales: "persuasive, enthusiastic, and action-oriented. Highlight benefits and encourage engagement.",
     };
 
     const goalInstructions: Record<string, string> = {
-      lead_generation: "Your primary goal is to capture visitor contact information (email, phone). Naturally guide conversations toward asking for their email or phone number to follow up.",
-      sales: "Your primary goal is to convert visitors into customers. Highlight product benefits, address objections, and encourage purchases or demos.",
-      support: "Your primary goal is to provide helpful customer support. Answer questions accurately and solve problems efficiently.",
+      lead_generation: `Your primary goal is to capture visitor contact information naturally.
+- Look for opportunities to offer valuable resources (demos, guides, consultations) in exchange for contact info
+- Ask for email/phone when it makes sense in the conversation flow
+- Don't be pushy, but guide toward providing contact details`,
+      sales: `Your primary goal is to convert visitors into customers.
+- Highlight product benefits and value propositions
+- Address objections proactively
+- Encourage demos, trials, or purchases when appropriate
+- Use social proof and urgency when natural`,
+      support: `Your primary goal is to provide excellent customer support.
+- Answer questions accurately and completely
+- Solve problems efficiently
+- Escalate appropriately when you can't fully help
+- Be patient and empathetic`,
     };
 
-    const systemPrompt = `You are an AI assistant chatbot for ${chatbot.name}. 
-You are embedded on the website: ${chatbot.website_url}
+    const intentGuidance: Record<string, string> = {
+      pricing: "The user is asking about pricing. If you have pricing information, be specific. If not, offer to connect them with sales.",
+      features: "The user wants to know about features or capabilities. Be specific about what the product can do.",
+      "how-to": "The user needs step-by-step guidance. Be clear, sequential, and thorough.",
+      contact: "The user wants to reach someone. Provide contact information if available, or offer to help directly.",
+      about: "The user wants to learn about the company/product. Share relevant background information.",
+      troubleshooting: "The user has a problem. Be empathetic, ask clarifying questions if needed, and provide solutions.",
+      general: "Understand what the user needs and provide helpful, relevant information.",
+    };
 
-Personality: Be ${toneDescriptions[chatbot.tone] || "friendly and helpful"}.
+    const systemPrompt = `# AI Assistant Configuration
 
-${goalInstructions[chatbot.goal] || "Help visitors with their questions."}
+## Identity
+You are an AI assistant for **${chatbot.name}**${chatbot.website_url ? ` (${chatbot.website_url})` : ""}.
 
-${hasContext ? `Use the following knowledge base information to answer questions accurately. If the information doesn't contain the answer, you can provide general assistance but mention that you may not have complete information about that specific topic.` : ""}
+## Communication Style
+${toneDescriptions[chatbot.tone] || toneDescriptions.friendly}
 
-Keep responses concise (2-3 sentences max unless more detail is needed). Be helpful and engaging.
-${combinedContext}`;
+## Primary Objective
+${goalInstructions[chatbot.goal] || goalInstructions.support}
 
-    console.log(`System prompt length: ${systemPrompt.length} chars, has context: ${hasContext}`);
+## Current User Intent
+${intentGuidance[intent] || intentGuidance.general}
 
-    // Call Lovable AI Gateway
+## Response Guidelines
+1. **Be Accurate**: Only state facts from the provided knowledge base. If unsure, say so.
+2. **Be Concise**: Keep responses focused (2-4 sentences unless detail is needed).
+3. **Be Helpful**: Anticipate follow-up questions and address them proactively.
+4. **Cite Sources**: When using specific information, briefly mention where it comes from.
+5. **Stay On Topic**: Focus on what the user asked, don't ramble.
+
+${hasContext ? `## Available Knowledge
+You have access to ${sortedContexts.length} relevant pieces of information from:
+${sources.map(s => `- ${s}`).join("\n")}
+
+If the user's question isn't covered by this information, acknowledge that and offer to help in other ways.` : `## Knowledge Status
+No specific knowledge base content was found for this query. Provide general assistance and offer to connect the user with a human if needed.`}
+
+${contextSection}`;
+
+    console.log(`System prompt length: ${systemPrompt.length} chars`);
+
+    // Call AI with enhanced prompt
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -317,7 +480,7 @@ ${combinedContext}`;
           { role: "system", content: systemPrompt },
           ...(history || []).map((m) => ({ role: m.role, content: m.content })),
         ],
-        max_tokens: 500,
+        max_tokens: 600,
         temperature: 0.7,
       }),
     });
@@ -361,6 +524,7 @@ ${combinedContext}`;
       JSON.stringify({
         message: assistantMessage,
         conversation_id: currentConversationId,
+        sources: sources.slice(0, 3), // Return top sources for transparency
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
