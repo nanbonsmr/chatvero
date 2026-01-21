@@ -111,7 +111,9 @@ export type Database = {
       }
       chatbots: {
         Row: {
+          auto_show_welcome: boolean | null
           created_at: string
+          follow_up_message: string | null
           goal: string
           id: string
           is_active: boolean | null
@@ -121,10 +123,13 @@ export type Database = {
           updated_at: string
           user_id: string
           website_url: string
+          welcome_delay_seconds: number | null
           welcome_message: string | null
         }
         Insert: {
+          auto_show_welcome?: boolean | null
           created_at?: string
+          follow_up_message?: string | null
           goal?: string
           id?: string
           is_active?: boolean | null
@@ -134,10 +139,13 @@ export type Database = {
           updated_at?: string
           user_id: string
           website_url: string
+          welcome_delay_seconds?: number | null
           welcome_message?: string | null
         }
         Update: {
+          auto_show_welcome?: boolean | null
           created_at?: string
+          follow_up_message?: string | null
           goal?: string
           id?: string
           is_active?: boolean | null
@@ -147,6 +155,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website_url?: string
+          welcome_delay_seconds?: number | null
           welcome_message?: string | null
         }
         Relationships: []

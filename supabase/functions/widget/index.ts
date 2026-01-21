@@ -23,10 +23,10 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // Get chatbot settings
+  // Get chatbot settings including new welcome behavior fields
   const { data: chatbot } = await supabase
     .from("chatbots")
-    .select("name, welcome_message, primary_color, is_active")
+    .select("name, welcome_message, primary_color, is_active, goal, auto_show_welcome, welcome_delay_seconds, follow_up_message")
     .eq("id", botId)
     .single();
 
@@ -34,11 +34,31 @@ Deno.serve(async (req) => {
     return new Response("Chatbot not found or inactive", { status: 404 });
   }
 
+  // Generate goal-specific default welcome messages if not customized
+  const goalWelcomeMessages: Record<string, string> = {
+    lead_generation: "Hi there! 👋 I'd love to help you today. What brings you here?",
+    sales: "Welcome! 🎉 I'm here to help you find exactly what you need. How can I assist?",
+    support: "Hello! 👋 I'm here to help with any questions. What can I do for you?",
+  };
+
+  const goalFollowUpMessages: Record<string, string> = {
+    lead_generation: "Feel free to ask me anything! I can also connect you with our team if you'd like personalized assistance.",
+    sales: "I can tell you about our products, pricing, or help you get started with a demo!",
+    support: "I have access to our knowledge base and can help troubleshoot any issues you're facing.",
+  };
+
+  const welcomeMessage = chatbot.welcome_message || goalWelcomeMessages[chatbot.goal] || "Hi! How can I help you today?";
+  const followUpMessage = chatbot.follow_up_message || goalFollowUpMessages[chatbot.goal] || "";
+
   const config = {
     botId,
     name: chatbot.name,
-    welcomeMessage: chatbot.welcome_message || "Hi! How can I help you today?",
+    welcomeMessage,
+    followUpMessage,
     primaryColor: chatbot.primary_color || "#6366f1",
+    goal: chatbot.goal,
+    autoShowWelcome: chatbot.auto_show_welcome ?? true,
+    welcomeDelaySeconds: chatbot.welcome_delay_seconds ?? 2,
     apiUrl: `${Deno.env.get("SUPABASE_URL")}/functions/v1`,
   };
 
@@ -51,6 +71,7 @@ Deno.serve(async (req) => {
   let conversationId = null;
   let isOpen = false;
   let isLoading = false;
+  let hasShownWelcome = sessionStorage.getItem('embedai_welcomed_' + CONFIG.botId) === 'true';
 
   // Styles
   const styles = document.createElement('style');
@@ -64,6 +85,30 @@ Deno.serve(async (req) => {
     }
     #embedai-bubble:hover { transform: scale(1.05); box-shadow: 0 6px 25px rgba(0,0,0,0.25); }
     #embedai-bubble svg { width: 28px; height: 28px; fill: white; }
+    #embedai-bubble-badge {
+      position: absolute; top: -2px; right: -2px; width: 18px; height: 18px;
+      background: #ef4444; border-radius: 50%; border: 2px solid white;
+      display: none; animation: embedai-pulse 2s infinite;
+    }
+    @keyframes embedai-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    #embedai-preview-bubble {
+      position: fixed; bottom: 90px; right: 20px; max-width: 280px;
+      background: white; border-radius: 16px; padding: 12px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: none; z-index: 999998;
+      animation: embedai-slide-up 0.3s ease; cursor: pointer;
+    }
+    #embedai-preview-bubble::after {
+      content: ''; position: absolute; bottom: -8px; right: 30px;
+      width: 0; height: 0; border-left: 8px solid transparent;
+      border-right: 8px solid transparent; border-top: 8px solid white;
+    }
+    #embedai-preview-bubble p { margin: 0; font-size: 14px; color: #1f2937; line-height: 1.4; }
+    #embedai-preview-bubble .close-preview {
+      position: absolute; top: -8px; right: -8px; width: 24px; height: 24px;
+      background: #f3f4f6; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 14px; color: #6b7280;
+    }
+    #embedai-preview-bubble .close-preview:hover { background: #e5e7eb; }
     #embedai-chat {
       position: fixed; bottom: 90px; right: 20px; width: 380px; max-width: calc(100vw - 40px);
       height: 520px; max-height: calc(100vh - 120px); background: white; border-radius: 16px;
@@ -112,7 +157,12 @@ Deno.serve(async (req) => {
   const widget = document.createElement('div');
   widget.id = 'embedai-widget';
   widget.innerHTML = \`
+    <div id="embedai-preview-bubble">
+      <button class="close-preview">×</button>
+      <p></p>
+    </div>
     <div id="embedai-bubble">
+      <div id="embedai-bubble-badge"></div>
       <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
     </div>
     <div id="embedai-chat">
@@ -142,6 +192,10 @@ Deno.serve(async (req) => {
   document.body.appendChild(widget);
 
   const bubble = document.getElementById('embedai-bubble');
+  const bubbleBadge = document.getElementById('embedai-bubble-badge');
+  const previewBubble = document.getElementById('embedai-preview-bubble');
+  const previewText = previewBubble.querySelector('p');
+  const previewClose = previewBubble.querySelector('.close-preview');
   const chat = document.getElementById('embedai-chat');
   const messages = document.getElementById('embedai-messages');
   const input = document.getElementById('embedai-input');
@@ -170,11 +224,51 @@ Deno.serve(async (req) => {
     if (typing) typing.remove();
   }
 
-  function toggleChat() {
-    isOpen = !isOpen;
-    chat.classList.toggle('open', isOpen);
-    if (isOpen && messages.children.length === 0) {
+  function showWelcomePreview() {
+    if (hasShownWelcome || isOpen) return;
+    
+    previewText.textContent = CONFIG.welcomeMessage;
+    previewBubble.style.display = 'block';
+    bubbleBadge.style.display = 'block';
+    
+    sessionStorage.setItem('embedai_welcomed_' + CONFIG.botId, 'true');
+    hasShownWelcome = true;
+  }
+
+  function hideWelcomePreview() {
+    previewBubble.style.display = 'none';
+    bubbleBadge.style.display = 'none';
+  }
+
+  function openChat() {
+    isOpen = true;
+    hideWelcomePreview();
+    chat.classList.add('open');
+    
+    if (messages.children.length === 0) {
       addMessage(CONFIG.welcomeMessage, true);
+      
+      // Show follow-up message after a short delay
+      if (CONFIG.followUpMessage) {
+        setTimeout(() => {
+          addMessage(CONFIG.followUpMessage, true);
+        }, 1000);
+      }
+    }
+    
+    input.focus();
+  }
+
+  function closeChat() {
+    isOpen = false;
+    chat.classList.remove('open');
+  }
+
+  function toggleChat() {
+    if (isOpen) {
+      closeChat();
+    } else {
+      openChat();
     }
   }
 
@@ -218,10 +312,29 @@ Deno.serve(async (req) => {
     sendBtn.disabled = false;
   }
 
+  // Event listeners
   bubble.addEventListener('click', toggleChat);
-  closeBtn.addEventListener('click', toggleChat);
+  closeBtn.addEventListener('click', closeChat);
   sendBtn.addEventListener('click', sendMessage);
   input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+  
+  previewBubble.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('close-preview')) {
+      openChat();
+    }
+  });
+  
+  previewClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideWelcomePreview();
+  });
+
+  // Auto-show welcome message after delay
+  if (CONFIG.autoShowWelcome && !hasShownWelcome) {
+    setTimeout(() => {
+      showWelcomePreview();
+    }, CONFIG.welcomeDelaySeconds * 1000);
+  }
 })();
 `;
 
