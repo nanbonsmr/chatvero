@@ -5,7 +5,7 @@ import { ArrowRight, MessageSquare, Sparkles, Zap } from "lucide-react";
 
 export const CTASection = () => {
   return (
-    <section className="py-32 relative overflow-hidden">
+    <section className="py-20 sm:py-24 lg:py-32 relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 gradient-primary" />
       
@@ -44,7 +44,7 @@ export const CTASection = () => {
         transition={{ duration: 12, repeat: Infinity }}
       />
 
-      <div className="container mx-auto px-4 relative">
+      <div className="container mx-auto px-4 sm:px-6 relative">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -58,24 +58,24 @@ export const CTASection = () => {
             whileInView={{ scale: 1, rotate: 0 }}
             viewport={{ once: true }}
             transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
-            className="relative w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-10"
+            className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-8 sm:mb-10"
           >
-            <MessageSquare className="w-10 h-10 text-white" />
+            <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
             <motion.div 
-              className="absolute -top-2 -right-2"
+              className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2"
               animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              <Sparkles className="w-6 h-6 text-yellow-300" />
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-300" />
             </motion.div>
           </motion.div>
 
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="font-display text-3xl sm:text-4xl lg:text-6xl font-bold text-white mb-8 tracking-tight"
+            className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-6 sm:mb-8 tracking-tight px-2"
           >
             Ready to Convert More Visitors?
           </motion.h2>
@@ -85,41 +85,41 @@ export const CTASection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
-            className="text-xl text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed"
+            className="text-base sm:text-lg md:text-xl text-white/80 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed px-4 sm:px-0"
           >
             Join thousands of businesses using EmbedAI to engage visitors and capture leads automatically.
           </motion.p>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.5 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0"
           >
-            <Link to="/signup">
+            <Link to="/signup" className="w-full sm:w-auto">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button 
                   size="lg" 
-                  className="w-full sm:w-auto h-14 px-8 text-base bg-white text-primary hover:bg-white/90 font-semibold shadow-2xl shadow-black/20 group"
+                  className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base bg-white text-primary hover:bg-white/90 font-semibold shadow-2xl shadow-black/20 group"
                 >
-                  <Zap className="w-5 h-5 mr-2" />
+                  <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Start Your Free Trial
                   <motion.div
                     className="ml-2"
                     animate={{ x: [0, 4, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </motion.div>
                 </Button>
               </motion.div>
             </Link>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="w-full sm:w-auto h-14 px-8 text-base border-white/30 text-white hover:bg-white/10 hover:text-white hover:border-white/50 transition-all duration-300"
+                className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base border-white/30 text-white hover:bg-white/10 hover:text-white hover:border-white/50 transition-all duration-300"
               >
                 Schedule a Demo
               </Button>
@@ -132,10 +132,10 @@ export const CTASection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.6 }}
-            className="mt-16 pt-10 border-t border-white/20"
+            className="mt-12 sm:mt-16 pt-8 sm:pt-10 border-t border-white/20"
           >
-            <p className="text-sm text-white/60 mb-6">Trusted by innovative companies worldwide</p>
-            <div className="flex items-center justify-center flex-wrap gap-x-12 gap-y-4">
+            <p className="text-xs sm:text-sm text-white/60 mb-4 sm:mb-6">Trusted by innovative companies worldwide</p>
+            <div className="flex items-center justify-center flex-wrap gap-x-6 sm:gap-x-12 gap-y-3 sm:gap-y-4">
               {["TechCorp", "StartupX", "Enterprise", "GrowthCo", "ScaleUp"].map((company, i) => (
                 <motion.span 
                   key={company} 
@@ -143,7 +143,7 @@ export const CTASection = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.7 + i * 0.1 }}
-                  className="text-white/40 font-display font-semibold text-lg hover:text-white/60 transition-colors cursor-default"
+                  className="text-white/40 font-display font-semibold text-sm sm:text-lg hover:text-white/60 transition-colors cursor-default"
                 >
                   {company}
                 </motion.span>
