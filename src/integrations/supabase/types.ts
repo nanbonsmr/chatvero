@@ -151,14 +151,67 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_analytics: {
+        Row: {
+          avg_sources_used: number | null
+          chatbot_id: string
+          context_hit_count: number | null
+          conversation_count: number | null
+          created_at: string
+          date: string
+          id: string
+          intent: string
+          lead_conversion_count: number | null
+          message_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          avg_sources_used?: number | null
+          chatbot_id: string
+          context_hit_count?: number | null
+          conversation_count?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          intent: string
+          lead_conversion_count?: number | null
+          message_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          avg_sources_used?: number | null
+          chatbot_id?: string
+          context_hit_count?: number | null
+          conversation_count?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          intent?: string
+          lead_conversion_count?: number | null
+          message_count?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_analytics_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           archived_at: string | null
           category: string | null
           chatbot_id: string
           ended_at: string | null
+          has_lead: boolean | null
           id: string
+          message_count: number | null
           page_url: string | null
+          primary_intent: string | null
           started_at: string
           user_agent: string | null
           visitor_id: string
@@ -168,8 +221,11 @@ export type Database = {
           category?: string | null
           chatbot_id: string
           ended_at?: string | null
+          has_lead?: boolean | null
           id?: string
+          message_count?: number | null
           page_url?: string | null
+          primary_intent?: string | null
           started_at?: string
           user_agent?: string | null
           visitor_id: string
@@ -179,8 +235,11 @@ export type Database = {
           category?: string | null
           chatbot_id?: string
           ended_at?: string | null
+          has_lead?: boolean | null
           id?: string
+          message_count?: number | null
           page_url?: string | null
+          primary_intent?: string | null
           started_at?: string
           user_agent?: string | null
           visitor_id?: string
@@ -283,22 +342,31 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          has_context: boolean | null
           id: string
+          intent: string | null
           role: string
+          sources_used: number | null
         }
         Insert: {
           content: string
           conversation_id: string
           created_at?: string
+          has_context?: boolean | null
           id?: string
+          intent?: string | null
           role: string
+          sources_used?: number | null
         }
         Update: {
           content?: string
           conversation_id?: string
           created_at?: string
+          has_context?: boolean | null
           id?: string
+          intent?: string | null
           role?: string
+          sources_used?: number | null
         }
         Relationships: [
           {
@@ -331,6 +399,16 @@ export type Database = {
         }[]
       }
       owns_chatbot: { Args: { chatbot_uuid: string }; Returns: boolean }
+      update_conversation_analytics: {
+        Args: {
+          p_chatbot_id: string
+          p_has_context?: boolean
+          p_intent: string
+          p_is_lead?: boolean
+          p_sources_used?: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
