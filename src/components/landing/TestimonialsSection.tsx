@@ -110,13 +110,13 @@ export const TestimonialsSection = () => {
             <span className="text-sm font-medium text-primary">Customer Stories</span>
           </motion.div>
           
-          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-2">
             Loved by{" "}
             <span className="text-gradient">thousands</span>
             {" "}of businesses
           </h2>
           
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base sm:text-lg text-muted-foreground px-4 sm:px-0">
             See how companies are transforming their customer experience with AI-powered chatbots
           </p>
         </motion.div>
@@ -142,36 +142,36 @@ export const TestimonialsSection = () => {
                       scale: selectedIndex === index ? 1 : 0.95,
                     }}
                     transition={{ duration: 0.3 }}
-                    className="bg-card border border-border rounded-2xl p-8 md:p-10 shadow-card relative group"
+                    className="bg-card border border-border rounded-xl sm:rounded-2xl p-5 sm:p-8 md:p-10 shadow-card relative group"
                   >
                     {/* Glow effect */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     
                     {/* Quote icon */}
-                    <div className="absolute -top-4 -left-2 w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/25">
-                      <Quote className="w-5 h-5 text-primary-foreground" />
+                    <div className="absolute -top-3 -left-1 sm:-top-4 sm:-left-2 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/25">
+                      <Quote className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
                     </div>
                     
                     {/* Rating */}
-                    <div className="flex gap-1 mb-6 pt-4">
+                    <div className="flex gap-0.5 sm:gap-1 mb-4 sm:mb-6 pt-4">
                       {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+                        <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400 text-amber-400" />
                       ))}
                     </div>
                     
                     {/* Quote */}
-                    <blockquote className="text-lg md:text-xl text-foreground mb-8 leading-relaxed relative z-10">
+                    <blockquote className="text-base sm:text-lg md:text-xl text-foreground mb-6 sm:mb-8 leading-relaxed relative z-10">
                       "{testimonial.quote}"
                     </blockquote>
                     
                     {/* Author */}
-                    <div className="flex items-center gap-4 relative z-10">
-                      <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-semibold shadow-lg shadow-primary/20">
+                    <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm sm:text-base shadow-lg shadow-primary/20">
                         {testimonial.avatar}
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground">{testimonial.author}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-semibold text-foreground text-sm sm:text-base">{testimonial.author}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {testimonial.role} at <span className="text-primary">{testimonial.company}</span>
                         </p>
                       </div>
@@ -183,25 +183,25 @@ export const TestimonialsSection = () => {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-center gap-4 mt-8">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
             <Button
               variant="outline"
               size="icon"
               onClick={scrollPrev}
-              className="w-12 h-12 rounded-full border-border/50 hover:bg-secondary hover:border-border transition-all duration-300"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-border/50 hover:bg-secondary hover:border-border transition-all duration-300"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
             
             {/* Dots */}
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 sm:gap-2">
               {testimonials.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => emblaApi?.scrollTo(index)}
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${
                     selectedIndex === index 
-                      ? "w-8 bg-primary" 
+                      ? "w-6 sm:w-8 bg-primary" 
                       : "bg-border hover:bg-muted-foreground/50"
                   }`}
                 />
@@ -212,9 +212,9 @@ export const TestimonialsSection = () => {
               variant="outline"
               size="icon"
               onClick={scrollNext}
-              className="w-12 h-12 rounded-full border-border/50 hover:bg-secondary hover:border-border transition-all duration-300"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-border/50 hover:bg-secondary hover:border-border transition-all duration-300"
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
         </motion.div>
@@ -224,13 +224,13 @@ export const TestimonialsSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-20"
+          className="mt-12 sm:mt-16 lg:mt-20"
         >
-          <p className="text-center text-sm text-muted-foreground mb-8">
+          <p className="text-center text-xs sm:text-sm text-muted-foreground mb-6 sm:mb-8">
             Trusted by innovative companies worldwide
           </p>
           
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 md:gap-10">
             {companyLogos.map((company, index) => (
               <motion.div
                 key={company.name}
@@ -238,12 +238,12 @@ export const TestimonialsSection = () => {
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.4, delay: 0.5 + index * 0.05 }}
                 whileHover={{ scale: 1.05, y: -2 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card/50 border border-border/50 hover:border-border hover:shadow-card transition-all duration-300 cursor-default"
+                className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-card/50 border border-border/50 hover:border-border hover:shadow-card transition-all duration-300 cursor-default"
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-muted to-secondary flex items-center justify-center">
-                  <span className="text-xs font-bold text-muted-foreground">{company.initials}</span>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-gradient-to-br from-muted to-secondary flex items-center justify-center">
+                  <span className="text-[10px] sm:text-xs font-bold text-muted-foreground">{company.initials}</span>
                 </div>
-                <span className="font-medium text-muted-foreground">{company.name}</span>
+                <span className="font-medium text-xs sm:text-sm text-muted-foreground">{company.name}</span>
               </motion.div>
             ))}
           </div>

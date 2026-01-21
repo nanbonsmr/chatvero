@@ -70,32 +70,32 @@ export const HeroSection = () => {
 
       <motion.div 
         style={{ y, opacity }}
-        className="container mx-auto px-4 relative"
+        className="container mx-auto px-4 sm:px-6 relative"
       >
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-12 items-center min-h-[calc(100vh-10rem)]">
+        <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-12 items-center min-h-[calc(100vh-10rem)]">
           {/* Left Column - Content */}
-          <div className="text-center lg:text-left">
+          <div className="text-center lg:text-left order-2 lg:order-1">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/10 mb-8 backdrop-blur-sm"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/5 border border-primary/10 mb-6 sm:mb-8 backdrop-blur-sm"
             >
               <motion.div
                 animate={{ rotate: [0, 15, -15, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Sparkles className="w-4 h-4 text-primary" />
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               </motion.div>
-              <span className="text-sm font-medium text-foreground/80">AI-Powered Chatbots in Minutes</span>
+              <span className="text-xs sm:text-sm font-medium text-foreground/80">AI-Powered Chatbots in Minutes</span>
             </motion.div>
 
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] mb-8 tracking-tight"
+              className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] mb-6 sm:mb-8 tracking-tight"
             >
               Turn Your Website Into a{" "}
               <span className="relative inline-block">
@@ -133,7 +133,7 @@ export const HeroSection = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
+              className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed px-2 sm:px-0"
             >
               Paste your URL, and we'll create an AI chatbot trained on your content. 
               Engage visitors 24/7, capture leads, and boost conversions—no coding required.
@@ -144,13 +144,13 @@ export const HeroSection = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12"
+              className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start mb-10 sm:mb-12 px-4 sm:px-0"
             >
-              <Link to="/signup">
+              <Link to="/signup" className="w-full sm:w-auto">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     size="lg" 
-                    className="w-full sm:w-auto h-14 px-8 text-base gradient-primary text-primary-foreground shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300 group"
+                    className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base gradient-primary text-primary-foreground shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300 group"
                   >
                     Start Free Trial
                     <motion.div
@@ -158,18 +158,18 @@ export const HeroSection = () => {
                       animate={{ x: [0, 4, 0] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      <ArrowRight className="w-5 h-5" />
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                     </motion.div>
                   </Button>
                 </motion.div>
               </Link>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="w-full sm:w-auto h-14 px-8 text-base border-border/60 hover:bg-secondary/80 hover:border-primary/30 transition-all duration-300 backdrop-blur-sm group"
+                  className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base border-border/60 hover:bg-secondary/80 hover:border-primary/30 transition-all duration-300 backdrop-blur-sm group"
                 >
-                  <Play className="w-5 h-5 mr-2 group-hover:text-primary transition-colors" />
+                  <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:text-primary transition-colors" />
                   Watch Demo
                 </Button>
               </motion.div>
@@ -180,9 +180,9 @@ export const HeroSection = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start"
+              className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 justify-center lg:justify-start"
             >
-              <div className="flex -space-x-3">
+              <div className="flex -space-x-2 sm:-space-x-3">
                 {[
                   "bg-gradient-to-br from-blue-400 to-blue-600",
                   "bg-gradient-to-br from-purple-400 to-purple-600",
@@ -195,20 +195,20 @@ export const HeroSection = () => {
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.6 + i * 0.1, type: "spring" }}
-                    className={`w-11 h-11 rounded-full ${gradient} border-[3px] border-background flex items-center justify-center text-xs font-bold text-white shadow-lg`}
+                    className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full ${gradient} border-2 sm:border-[3px] border-background flex items-center justify-center text-[10px] sm:text-xs font-bold text-white shadow-lg`}
                   >
                     {String.fromCharCode(65 + i)}
                   </motion.div>
                 ))}
               </div>
               <div className="text-center sm:text-left">
-                <div className="flex items-center gap-1 justify-center sm:justify-start mb-1">
+                <div className="flex items-center gap-0.5 sm:gap-1 justify-center sm:justify-start mb-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
                   ))}
-                  <span className="text-sm font-semibold ml-1">4.9</span>
+                  <span className="text-xs sm:text-sm font-semibold ml-1">4.9</span>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   <span className="font-semibold text-foreground">2,000+</span> businesses trust EmbedAI
                 </p>
               </div>
@@ -217,10 +217,10 @@ export const HeroSection = () => {
 
           {/* Right Column - Widget Preview */}
           <motion.div
-            initial={{ opacity: 0, x: 50, rotateY: -10 }}
-            animate={{ opacity: 1, x: 0, rotateY: 0 }}
-            transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="relative lg:pl-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="relative order-1 lg:order-2 lg:pl-8 mb-4 lg:mb-0"
           >
             <ChatWidgetPreview />
           </motion.div>
