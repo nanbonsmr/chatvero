@@ -513,18 +513,46 @@ ${contextSection}`;
 
     console.log(`AI response: "${assistantMessage.substring(0, 100)}..."`);
 
-    // Save assistant message
+    // Save assistant message with analytics data
     await supabase.from("messages").insert({
       conversation_id: currentConversationId,
       role: "assistant",
       content: assistantMessage,
+      intent: intent,
+      has_context: hasContext,
+      sources_used: sources.length,
     });
+
+    // Update conversation with primary intent and message count
+    await supabase
+      .from("conversations")
+      .update({ 
+        primary_intent: intent,
+        message_count: (history?.length || 0) + 2, // user + assistant message
+      })
+      .eq("id", currentConversationId);
+
+    // Update analytics aggregates
+    try {
+      await supabase.rpc("update_conversation_analytics", {
+        p_chatbot_id: chatbot_id,
+        p_intent: intent,
+        p_has_context: hasContext,
+        p_sources_used: sources.length,
+        p_is_lead: false,
+      });
+    } catch (analyticsError) {
+      console.error("Failed to update analytics:", analyticsError);
+      // Don't fail the request if analytics update fails
+    }
 
     return new Response(
       JSON.stringify({
         message: assistantMessage,
         conversation_id: currentConversationId,
-        sources: sources.slice(0, 3), // Return top sources for transparency
+        sources: sources.slice(0, 3),
+        intent: intent,
+        hasContext: hasContext,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
