@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -28,7 +29,9 @@ import {
   Code,
   Copy,
   Check,
-  ExternalLink
+  ExternalLink,
+  Bell,
+  Target,
 } from "lucide-react";
 
 const tones = [
@@ -38,9 +41,9 @@ const tones = [
 ];
 
 const goals = [
-  { value: "lead_generation", label: "Lead Generation", description: "Capture visitor contact info" },
-  { value: "sales", label: "Sales", description: "Convert visitors to customers" },
-  { value: "support", label: "Support", description: "Help and answer questions" },
+  { value: "lead_generation", label: "Lead Generation", description: "Capture visitor contact info", icon: "📧" },
+  { value: "sales", label: "Sales", description: "Convert visitors to customers", icon: "💰" },
+  { value: "support", label: "Support", description: "Help and answer questions", icon: "🎧" },
 ];
 
 const colorPresets = [
@@ -76,14 +79,18 @@ const ChatbotSettings = () => {
     });
     setTimeout(() => setCopied(false), 2000);
   };
+
   const [chatbot, setChatbot] = useState<{
     name: string;
     website_url: string;
     welcome_message: string;
+    follow_up_message: string;
     primary_color: string;
     tone: string;
     goal: string;
     is_active: boolean;
+    auto_show_welcome: boolean;
+    welcome_delay_seconds: number;
   } | null>(null);
 
   useEffect(() => {
@@ -109,11 +116,14 @@ const ChatbotSettings = () => {
       setChatbot({
         name: data.name,
         website_url: data.website_url,
-        welcome_message: data.welcome_message || "Hi! How can I help you today?",
+        welcome_message: data.welcome_message || "",
+        follow_up_message: data.follow_up_message || "",
         primary_color: data.primary_color || "#6366f1",
         tone: data.tone,
         goal: data.goal,
         is_active: data.is_active ?? true,
+        auto_show_welcome: data.auto_show_welcome ?? true,
+        welcome_delay_seconds: data.welcome_delay_seconds ?? 2,
       });
       setIsLoading(false);
     };
@@ -131,10 +141,13 @@ const ChatbotSettings = () => {
       .update({
         name: chatbot.name,
         welcome_message: chatbot.welcome_message,
+        follow_up_message: chatbot.follow_up_message,
         primary_color: chatbot.primary_color,
         tone: chatbot.tone,
         goal: chatbot.goal,
         is_active: chatbot.is_active,
+        auto_show_welcome: chatbot.auto_show_welcome,
+        welcome_delay_seconds: chatbot.welcome_delay_seconds,
       })
       .eq("id", id);
 
@@ -153,6 +166,33 @@ const ChatbotSettings = () => {
       title: "Saved!",
       description: "Chatbot settings have been updated",
     });
+  };
+
+  // Get goal-specific placeholder messages
+  const getWelcomePlaceholder = () => {
+    switch (chatbot?.goal) {
+      case "lead_generation":
+        return "Hi there! 👋 I'd love to help you today. What brings you here?";
+      case "sales":
+        return "Welcome! 🎉 I'm here to help you find exactly what you need. How can I assist?";
+      case "support":
+        return "Hello! 👋 I'm here to help with any questions. What can I do for you?";
+      default:
+        return "Hi! How can I help you today?";
+    }
+  };
+
+  const getFollowUpPlaceholder = () => {
+    switch (chatbot?.goal) {
+      case "lead_generation":
+        return "Feel free to ask me anything! I can also connect you with our team if you'd like personalized assistance.";
+      case "sales":
+        return "I can tell you about our products, pricing, or help you get started with a demo!";
+      case "support":
+        return "I have access to our knowledge base and can help troubleshoot any issues you're facing.";
+      default:
+        return "Let me know what you need help with!";
+    }
   };
 
   if (isLoading) {
@@ -285,11 +325,96 @@ const ChatbotSettings = () => {
             </Link>
           </motion.div>
 
-          {/* Basic Info */}
+          {/* Welcome Behavior */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
+            className="bg-card rounded-2xl border border-border p-6"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Bell className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-semibold">Welcome Behavior</h2>
+                <p className="text-sm text-muted-foreground">How the chatbot greets visitors</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {/* Auto-show toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Auto-show Welcome Message</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Show a preview bubble when visitors land on your site
+                  </p>
+                </div>
+                <Switch
+                  checked={chatbot.auto_show_welcome}
+                  onCheckedChange={(checked) => setChatbot({ ...chatbot, auto_show_welcome: checked })}
+                />
+              </div>
+
+              {/* Delay slider */}
+              {chatbot.auto_show_welcome && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>Delay before showing</Label>
+                    <span className="text-sm font-medium">{chatbot.welcome_delay_seconds}s</span>
+                  </div>
+                  <Slider
+                    value={[chatbot.welcome_delay_seconds]}
+                    onValueChange={([value]) => setChatbot({ ...chatbot, welcome_delay_seconds: value })}
+                    min={0}
+                    max={10}
+                    step={1}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    How long to wait before showing the welcome preview
+                  </p>
+                </div>
+              )}
+
+              {/* Welcome message */}
+              <div>
+                <Label htmlFor="welcome">Welcome Message</Label>
+                <Textarea
+                  id="welcome"
+                  value={chatbot.welcome_message}
+                  onChange={(e) => setChatbot({ ...chatbot, welcome_message: e.target.value })}
+                  placeholder={getWelcomePlaceholder()}
+                  className="mt-1.5 min-h-[80px]"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  First message shown when chat opens. Leave empty to use goal-based default.
+                </p>
+              </div>
+
+              {/* Follow-up message */}
+              <div>
+                <Label htmlFor="followup">Follow-up Message (optional)</Label>
+                <Textarea
+                  id="followup"
+                  value={chatbot.follow_up_message}
+                  onChange={(e) => setChatbot({ ...chatbot, follow_up_message: e.target.value })}
+                  placeholder={getFollowUpPlaceholder()}
+                  className="mt-1.5 min-h-[60px]"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Sent 1 second after welcome message to guide the conversation
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Basic Info */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
             className="bg-card rounded-2xl border border-border p-6"
           >
             <div className="flex items-center gap-3 mb-6">
@@ -299,31 +424,70 @@ const ChatbotSettings = () => {
               <h2 className="font-display text-lg font-semibold">Basic Information</h2>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Chatbot Name</Label>
-                <Input
-                  id="name"
-                  value={chatbot.name}
-                  onChange={(e) => setChatbot({ ...chatbot, name: e.target.value })}
-                  placeholder="My Chatbot"
-                  className="mt-1.5"
-                />
-              </div>
+            <div>
+              <Label htmlFor="name">Chatbot Name</Label>
+              <Input
+                id="name"
+                value={chatbot.name}
+                onChange={(e) => setChatbot({ ...chatbot, name: e.target.value })}
+                placeholder="My Chatbot"
+                className="mt-1.5"
+              />
+            </div>
+          </motion.div>
 
-              <div>
-                <Label htmlFor="welcome">Welcome Message</Label>
-                <Textarea
-                  id="welcome"
-                  value={chatbot.welcome_message}
-                  onChange={(e) => setChatbot({ ...chatbot, welcome_message: e.target.value })}
-                  placeholder="Hi! How can I help you today?"
-                  className="mt-1.5 min-h-[100px]"
-                />
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  This message appears when visitors first open the chat widget
-                </p>
+          {/* Goal Selection */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-card rounded-2xl border border-border p-6"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Target className="w-5 h-5 text-primary" />
               </div>
+              <div>
+                <h2 className="font-display text-lg font-semibold">Primary Goal</h2>
+                <p className="text-sm text-muted-foreground">This strongly influences how the AI responds</p>
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              {goals.map((goal) => (
+                <button
+                  key={goal.value}
+                  onClick={() => setChatbot({ ...chatbot, goal: goal.value })}
+                  className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
+                    chatbot.goal === goal.value 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <span className="text-2xl">{goal.icon}</span>
+                  <div className="flex-1">
+                    <div className="font-medium">{goal.label}</div>
+                    <div className="text-sm text-muted-foreground">{goal.description}</div>
+                  </div>
+                  {chatbot.goal === goal.value && (
+                    <Check className="w-5 h-5 text-primary" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 p-4 rounded-xl bg-muted/50">
+              <p className="text-sm text-muted-foreground">
+                {chatbot.goal === "lead_generation" && (
+                  <>💡 <strong>Lead Generation:</strong> AI will naturally guide conversations toward capturing emails and contact info.</>
+                )}
+                {chatbot.goal === "sales" && (
+                  <>💡 <strong>Sales:</strong> AI will highlight benefits, handle objections, and encourage purchases or demos.</>
+                )}
+                {chatbot.goal === "support" && (
+                  <>💡 <strong>Support:</strong> AI will focus on solving problems quickly and accurately.</>
+                )}
+              </p>
             </div>
           </motion.div>
 
@@ -331,7 +495,7 @@ const ChatbotSettings = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.25 }}
             className="bg-card rounded-2xl border border-border p-6"
           >
             <div className="flex items-center gap-3 mb-6">
@@ -390,7 +554,7 @@ const ChatbotSettings = () => {
                   className="px-4 py-2 rounded-2xl rounded-bl-md text-white text-sm max-w-[200px]"
                   style={{ backgroundColor: chatbot.primary_color }}
                 >
-                  {chatbot.welcome_message || "Hi! How can I help?"}
+                  {chatbot.welcome_message || getWelcomePlaceholder()}
                 </div>
               </div>
             </div>
@@ -407,54 +571,27 @@ const ChatbotSettings = () => {
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Globe className="w-5 h-5 text-primary" />
               </div>
-              <h2 className="font-display text-lg font-semibold">Behavior</h2>
+              <h2 className="font-display text-lg font-semibold">Conversation Tone</h2>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-6">
-              <div>
-                <Label>Conversation Tone</Label>
-                <Select
-                  value={chatbot.tone}
-                  onValueChange={(value) => setChatbot({ ...chatbot, tone: value })}
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tones.map((tone) => (
-                      <SelectItem key={tone.value} value={tone.value}>
-                        <div>
-                          <div className="font-medium">{tone.label}</div>
-                          <div className="text-xs text-muted-foreground">{tone.description}</div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Primary Goal</Label>
-                <Select
-                  value={chatbot.goal}
-                  onValueChange={(value) => setChatbot({ ...chatbot, goal: value })}
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {goals.map((goal) => (
-                      <SelectItem key={goal.value} value={goal.value}>
-                        <div>
-                          <div className="font-medium">{goal.label}</div>
-                          <div className="text-xs text-muted-foreground">{goal.description}</div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <Select
+              value={chatbot.tone}
+              onValueChange={(value) => setChatbot({ ...chatbot, tone: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {tones.map((tone) => (
+                  <SelectItem key={tone.value} value={tone.value}>
+                    <div>
+                      <div className="font-medium">{tone.label}</div>
+                      <div className="text-xs text-muted-foreground">{tone.description}</div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </motion.div>
         </div>
       </div>
