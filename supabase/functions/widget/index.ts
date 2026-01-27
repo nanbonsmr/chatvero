@@ -147,7 +147,9 @@ Deno.serve(async (req) => {
     #embedai-input {
       flex: 1; border: 1px solid #e5e7eb; border-radius: 24px; padding: 12px 18px;
       font-size: 14px; outline: none; transition: border-color 0.2s;
+      background: white; color: #1f2937;
     }
+    #embedai-input::placeholder { color: #9ca3af; }
     #embedai-input:focus { border-color: \${CONFIG.primaryColor}; }
     #embedai-send {
       width: 44px; height: 44px; border-radius: 50%; border: none;
