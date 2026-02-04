@@ -79,6 +79,28 @@ if (import.meta.main) {
         : "https://test.dodopayments.com";
 
       // Create checkout session with Dodo
+      const requestBody = {
+        product_cart: [
+          {
+            product_id: planMap[plan],
+            quantity: 1,
+          }
+        ],
+        customer: {
+          email: user.email,
+        },
+        payment_link: true,
+        return_url: `${origin}/dashboard?payment=success`,
+        metadata: {
+          user_id: user.id,
+          plan: plan,
+        },
+      };
+
+      console.log("Dodo request URL:", `${dodoBaseUrl}/checkouts`);
+      console.log("Dodo request body:", JSON.stringify(requestBody));
+      console.log("Product ID being used:", planMap[plan]);
+
       const checkoutResponse = await fetch(
         `${dodoBaseUrl}/checkouts`,
         {
@@ -87,33 +109,20 @@ if (import.meta.main) {
             "Authorization": `Bearer ${apiKey}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            product_cart: [
-              {
-                product_id: planMap[plan],
-                quantity: 1,
-              }
-            ],
-            customer: {
-              email: user.email,
-            },
-            payment_link: true,
-            return_url: `${origin}/dashboard?payment=success`,
-            metadata: {
-              user_id: user.id,
-              plan: plan,
-            },
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
+      console.log("Dodo response status:", checkoutResponse.status);
+      
+      const responseText = await checkoutResponse.text();
+      console.log("Dodo response body:", responseText);
+
       if (!checkoutResponse.ok) {
-        const errorText = await checkoutResponse.text();
-        console.error("Dodo API error:", errorText);
-        throw new Error(`Dodo API error: ${errorText}`);
+        throw new Error(`Dodo API error (${checkoutResponse.status}): ${responseText}`);
       }
 
-      const checkoutData = await checkoutResponse.json();
+      const checkoutData = JSON.parse(responseText);
 
       // Store pending subscription in database
       const { error: insertError } = await supabase
