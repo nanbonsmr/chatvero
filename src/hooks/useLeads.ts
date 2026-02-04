@@ -108,3 +108,21 @@ export const useDeleteLead = () => {
     },
   });
 };
+
+export const useBulkDeleteLeads = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (leadIds: string[]) => {
+      const { error } = await supabase
+        .from("leads")
+        .delete()
+        .in("id", leadIds);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
+};
