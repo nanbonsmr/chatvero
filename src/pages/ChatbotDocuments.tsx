@@ -248,11 +248,11 @@ const ChatbotDocuments = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="font-display text-2xl font-bold">Documents</h1>
-          <p className="text-muted-foreground mt-1">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-display text-xl sm:text-2xl font-bold">Documents</h1>
+          <p className="text-muted-foreground text-sm mt-1">
             {chatbot?.name || "Chatbot"} - Uploaded Documents
           </p>
         </div>
@@ -261,14 +261,14 @@ const ChatbotDocuments = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-4 sm:mb-6"
         >
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             className={`
-              relative border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer
+              relative border-2 border-dashed rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer
               ${isDragging 
                 ? "border-primary bg-primary/5" 
                 : "border-border hover:border-primary/50 hover:bg-secondary/30"
@@ -308,7 +308,7 @@ const ChatbotDocuments = () => {
         </motion.div>
 
         {/* Search */}
-        <div className="relative mb-6">
+        <div className="relative mb-4 sm:mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search documents..."
@@ -319,7 +319,7 @@ const ChatbotDocuments = () => {
         </div>
 
         {/* Documents List */}
-        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+        <div className="bg-card rounded-xl sm:rounded-2xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h2 className="font-semibold">
               {filteredDocuments.length} Document{filteredDocuments.length !== 1 ? "s" : ""} Uploaded

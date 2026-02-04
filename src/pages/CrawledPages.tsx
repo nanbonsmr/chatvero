@@ -152,31 +152,31 @@ const CrawledPages = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="font-display text-2xl font-bold">Knowledge Base</h1>
-          <p className="text-muted-foreground mt-1">{chatbot?.name || "Chatbot"} - Crawled Pages</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-display text-xl sm:text-2xl font-bold">Knowledge Base</h1>
+          <p className="text-muted-foreground text-sm mt-1">{chatbot?.name || "Chatbot"} - Crawled Pages</p>
         </div>
 
         {/* Add New Page */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl border border-border p-6 mb-6"
+          className="bg-card rounded-xl sm:rounded-2xl border border-border p-4 sm:p-6 mb-4 sm:mb-6"
         >
-          <h2 className="font-semibold mb-4 flex items-center gap-2">
-            <Plus className="w-5 h-5 text-primary" />
+          <h2 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             Add New Page
           </h2>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Input
               placeholder="https://example.com/page"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
               className="flex-1"
             />
-            <Button onClick={handleAddPage} disabled={isCrawlingNew || !newUrl.trim()}>
+            <Button onClick={handleAddPage} disabled={isCrawlingNew || !newUrl.trim()} className="w-full sm:w-auto">
               {isCrawlingNew ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
@@ -188,7 +188,7 @@ const CrawledPages = () => {
         </motion.div>
 
         {/* Search */}
-        <div className="relative mb-6">
+        <div className="relative mb-4 sm:mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search pages..."
@@ -199,7 +199,7 @@ const CrawledPages = () => {
         </div>
 
         {/* Pages List */}
-        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+        <div className="bg-card rounded-xl sm:rounded-2xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h2 className="font-semibold">
               {filteredPages.length} Page{filteredPages.length !== 1 ? "s" : ""} Indexed

@@ -69,24 +69,24 @@ const ChatbotLeads = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="font-display text-2xl font-bold">Leads</h1>
-            <p className="text-muted-foreground">Captured contact information</p>
+            <h1 className="font-display text-xl sm:text-2xl font-bold">Leads</h1>
+            <p className="text-muted-foreground text-sm">Captured contact information</p>
           </div>
-          <Button onClick={exportToCSV} disabled={filteredLeads.length === 0}>
+          <Button size="sm" onClick={exportToCSV} disabled={filteredLeads.length === 0} className="w-full sm:w-auto">
             <Download className="w-4 h-4" />
             Export CSV
           </Button>
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md mb-6">
+        <div className="relative mb-4 sm:mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, email, or phone..."
+            placeholder="Search leads..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -97,7 +97,7 @@ const ChatbotLeads = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-border/50 bg-card overflow-hidden"
+          className="rounded-xl sm:rounded-2xl border border-border/50 bg-card overflow-hidden"
         >
           {isLoading ? (
             <div className="p-12 text-center">
