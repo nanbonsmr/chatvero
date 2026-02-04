@@ -73,9 +73,14 @@ if (import.meta.main) {
       // Determine the redirect base URL
       const origin = req.headers.get("origin") || "https://embedbot.lovable.app";
 
+      // Use test or live endpoint based on environment
+      const dodoBaseUrl = Deno.env.get("DODO_ENV") === "live" 
+        ? "https://live.dodopayments.com" 
+        : "https://test.dodopayments.com";
+
       // Create checkout session with Dodo
       const checkoutResponse = await fetch(
-        "https://api.dodopayments.com/v1/checkout",
+        `${dodoBaseUrl}/checkouts`,
         {
           method: "POST",
           headers: {
@@ -83,14 +88,21 @@ if (import.meta.main) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            product_id: planMap[plan],
-            customer_email: user.email,
+            product_cart: [
+              {
+                product_id: planMap[plan],
+                quantity: 1,
+              }
+            ],
+            customer: {
+              email: user.email,
+            },
+            payment_link: true,
+            return_url: `${origin}/dashboard?payment=success`,
             metadata: {
               user_id: user.id,
               plan: plan,
             },
-            success_url: `${origin}/dashboard?payment=success`,
-            cancel_url: `${origin}/pricing?payment=cancelled`,
           }),
         }
       );
@@ -110,7 +122,7 @@ if (import.meta.main) {
           user_id: user.id,
           plan: plan,
           status: "pending",
-          dodo_transaction_id: checkoutData.transaction_id,
+          dodo_transaction_id: checkoutData.session_id,
         });
 
       if (insertError) {
@@ -121,7 +133,7 @@ if (import.meta.main) {
       return new Response(
         JSON.stringify({
           checkout_url: checkoutData.checkout_url,
-          transaction_id: checkoutData.transaction_id,
+          session_id: checkoutData.session_id,
         }),
         {
           status: 200,
