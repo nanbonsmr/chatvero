@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useChatbots, useDeleteChatbot } from "@/hooks/useChatbots";
 import DashboardLayout from "@/components/DashboardLayout";
+import { SubscriptionCard } from "@/components/dashboard/SubscriptionCard";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -132,6 +133,12 @@ const Dashboard = () => {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        {/* Subscription */}
+        <div>
+          <h2 className="font-display text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Your Subscription</h2>
+          <SubscriptionCard />
         </div>
 
         {/* Chatbots Grid */}
