@@ -49,7 +49,7 @@ export const Footer = () => {
             <Link to="/" className="flex items-center gap-2.5 mb-6 group">
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="w-10 h-10"
+                className="w-12 h-12"
               >
                 <img src={chatveroLogo} alt="Chatvero" className="w-full h-full object-contain" />
               </motion.div>
