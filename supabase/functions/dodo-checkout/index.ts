@@ -78,16 +78,18 @@ if (import.meta.main) {
       // Determine the redirect base URL
       const origin = req.headers.get("origin") || "https://embedbot.lovable.app";
 
-      // Use test or live endpoint based on environment
+      // Use test or live endpoint based on environment.
+      // IMPORTANT: default to live unless DODO_ENV explicitly opts into test.
+      // This prevents accidental 401s when a live key is used against test endpoints.
       const dodoEnv = (Deno.env.get("DODO_ENV") ?? "").trim().toLowerCase();
       const inferredMode: "live" | "test" =
-        ["live", "live_mode", "prod", "production"].includes(dodoEnv)
-          ? "live"
-          : ["test", "test_mode", "sandbox"].includes(dodoEnv)
-            ? "test"
-            : apiKey.toLowerCase().includes("live")
-              ? "live"
-              : "test";
+        ["test", "test_mode", "sandbox", "0", "false"].includes(dodoEnv)
+          ? "test"
+          : ["live", "live_mode", "prod", "production", "1", "true"].includes(dodoEnv)
+            ? "live"
+            : apiKey.toLowerCase().includes("test")
+              ? "test"
+              : "live";
 
       const dodoBaseUrl = inferredMode === "live"
         ? "https://live.dodopayments.com"
@@ -114,6 +116,7 @@ if (import.meta.main) {
 
       console.log("Dodo request URL:", `${dodoBaseUrl}/checkouts`);
       console.log("Dodo mode:", inferredMode);
+      console.log("Dodo env present:", Boolean(Deno.env.get("DODO_ENV")));
       console.log("Dodo request body:", JSON.stringify(requestBody));
       console.log("Product ID being used:", planMap[plan]);
 
