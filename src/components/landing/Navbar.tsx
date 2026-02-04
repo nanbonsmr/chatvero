@@ -12,7 +12,7 @@ export const Navbar = () => {
   const navLinks = [
     { name: "Features", href: "#features" },
     { name: "How it Works", href: "#how-it-works" },
-    { name: "Pricing", href: "#pricing" },
+    { name: "Pricing", href: "/pricing" },
   ];
 
   return (
@@ -40,17 +40,20 @@ export const Navbar = () => {
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-1">
               {navLinks.map((link, index) => (
-                <motion.a
+                <motion.div
                   key={link.name}
-                  href={link.href}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * index + 0.3 }}
-                  className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium text-sm group"
                 >
-                  {link.name}
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-1/2 transition-all duration-300" />
-                </motion.a>
+                  <Link
+                    to={link.href}
+                    className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium text-sm group"
+                  >
+                    {link.name}
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-1/2 transition-all duration-300" />
+                  </Link>
+                </motion.div>
               ))}
             </div>
 
@@ -141,17 +144,20 @@ export const Navbar = () => {
           >
             <div className="p-3 sm:p-4 space-y-1">
               {navLinks.map((link, index) => (
-                <motion.a
+                <motion.div
                   key={link.name}
-                  href={link.href}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="block px-3 sm:px-4 py-2.5 sm:py-3 text-foreground hover:bg-secondary/80 rounded-lg sm:rounded-xl transition-colors font-medium text-sm sm:text-base"
-                  onClick={() => setIsOpen(false)}
                 >
-                  {link.name}
-                </motion.a>
+                  <Link
+                    to={link.href}
+                    className="block px-3 sm:px-4 py-2.5 sm:py-3 text-foreground hover:bg-secondary/80 rounded-lg sm:rounded-xl transition-colors font-medium text-sm sm:text-base"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                </motion.div>
               ))}
               <div className="pt-3 sm:pt-4 mt-3 sm:mt-4 border-t border-border space-y-2 sm:space-y-3">
                 <Link to="/login" onClick={() => setIsOpen(false)}>
