@@ -137,6 +137,21 @@ Deno.serve(async (req) => {
     .embedai-msg { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.5; }
     .embedai-msg.bot { background: #f3f4f6; color: #1f2937; align-self: flex-start; border-bottom-left-radius: 4px; }
     .embedai-msg.user { background: \${CONFIG.primaryColor}; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .embedai-msg.limit-reached { 
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
+      border: 1px solid #f59e0b; 
+      color: #92400e; 
+    }
+    .embedai-msg.limit-reached .limit-icon { 
+      display: inline-block; 
+      margin-right: 8px; 
+      font-size: 16px; 
+    }
+    .embedai-msg.limit-reached .limit-title { 
+      font-weight: 600; 
+      display: block; 
+      margin-bottom: 4px; 
+    }
     .embedai-typing { display: flex; gap: 4px; padding: 12px 16px; }
     .embedai-typing span { width: 8px; height: 8px; background: #9ca3af; border-radius: 50%; animation: embedai-bounce 1.4s infinite ease-in-out; }
     .embedai-typing span:nth-child(1) { animation-delay: 0s; }
@@ -220,10 +235,17 @@ Deno.serve(async (req) => {
   const sendBtn = document.getElementById('embedai-send');
   const closeBtn = document.getElementById('embedai-close');
 
-  function addMessage(text, isBot) {
+  function addMessage(text, isBot, options = {}) {
     const msg = document.createElement('div');
     msg.className = 'embedai-msg ' + (isBot ? 'bot' : 'user');
-    msg.textContent = text;
+    
+    if (options.limitReached) {
+      msg.className += ' limit-reached';
+      msg.innerHTML = '<span class="limit-icon">⚠️</span><span class="limit-title">Message Limit Reached</span>' + text;
+    } else {
+      msg.textContent = text;
+    }
+    
     messages.appendChild(msg);
     messages.scrollTop = messages.scrollHeight;
   }
@@ -316,7 +338,15 @@ Deno.serve(async (req) => {
       hideTyping();
 
       if (data.error) {
-        addMessage('Sorry, something went wrong. Please try again.', true);
+        if (data.limitReached) {
+          addMessage('This chatbot has reached its monthly message limit. Please try again later or contact the site owner.', true, { limitReached: true });
+          // Disable input when limit is reached
+          input.disabled = true;
+          sendBtn.disabled = true;
+          input.placeholder = 'Message limit reached';
+        } else {
+          addMessage('Sorry, something went wrong. Please try again.', true);
+        }
       } else {
         conversationId = data.conversation_id;
         addMessage(data.message, true);
