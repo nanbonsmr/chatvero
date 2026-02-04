@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useChatbots, useDeleteChatbot } from "@/hooks/useChatbots";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SubscriptionCard } from "@/components/dashboard/SubscriptionCard";
+import { UsageStats } from "@/components/dashboard/UsageStats";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -135,10 +136,16 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Subscription */}
-        <div>
-          <h2 className="font-display text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Your Subscription</h2>
-          <SubscriptionCard />
+        {/* Subscription & Usage */}
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
+          <div>
+            <h2 className="font-display text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Your Subscription</h2>
+            <SubscriptionCard />
+          </div>
+          <div>
+            <h2 className="font-display text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Usage</h2>
+            <UsageStats />
+          </div>
         </div>
 
         {/* Chatbots Grid */}
