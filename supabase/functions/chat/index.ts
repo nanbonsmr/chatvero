@@ -180,6 +180,33 @@ function detectIntent(message: string): string {
   return "general";
 }
 
+// Extract lead info from message
+function extractLeadInfo(message: string): { email?: string; linkedin?: string; company?: string; name?: string } {
+  const info: any = {};
+  
+  // Email regex
+  const emailMatch = message.match(/[\w.-]+@[\w.-]+\.\w+/);
+  if (emailMatch) info.email = emailMatch[0];
+  
+  // LinkedIn regex
+  const linkedinMatch = message.match(/(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w-]+\/?/);
+  if (linkedinMatch) info.linkedin = linkedinMatch[0];
+  
+  // Very basic company detection (usually after "at" or "from")
+  const companyMatch = message.match(/\b(at|from|with)\s+([A-Z][\w\s&]+?)(?=\s|$|\.|\,)/);
+  if (companyMatch && companyMatch[2].length > 2) {
+    info.company = companyMatch[2].trim();
+  }
+
+  // Basic name detection (e.g. "I'm [Name]" or "My name is [Name]")
+  const nameMatch = message.match(/\b(my name is|i am|i'm)\s+([A-Z][a-z]+(\s+[A-Z][a-z]+)?)/i);
+  if (nameMatch) {
+    info.name = nameMatch[2].trim();
+  }
+  
+  return info;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -409,23 +436,24 @@ Deno.serve(async (req) => {
     };
 
     const goalInstructions: Record<string, string> = {
-      lead_generation: `🎯 YOUR PRIMARY MISSION: Capture visitor contact information (email, phone, name).
+      lead_generation: `🎯 YOUR PRIMARY MISSION: Capture visitor contact information (Email, Name, Company Name, or LinkedIn URL).
 
 **CRITICAL BEHAVIORS:**
 1. Within the first 2-3 exchanges, naturally offer something valuable in exchange for contact info:
-   - "I'd love to send you more details - what's the best email to reach you?"
-   - "Want me to have someone follow up with you personally? Just need your email!"
-   - "I can set up a personalized demo for you - what's your email?"
+   - "I'd love to send you more details - what's the best email and company name to reach you?"
+   - "I can look up some specific insights for your business. What's your company name or LinkedIn profile?"
+   - "Want me to have someone follow up with you personally? Just need your name and company!"
+   - "I can set up a personalized demo for you - what's your email or LinkedIn URL?"
 
 2. When answering questions, always tie back to a CTA:
-   - After explaining features: "Want to see this in action? I can arrange a demo if you share your email."
-   - After pricing info: "I can have our team send you a detailed proposal - what's your email?"
+   - After explaining features: "Want to see how this works for your specific company? Share your LinkedIn profile and I'll prepare some examples."
+   - After pricing info: "I can have our team send a custom proposal to your company - what's your work email?"
 
 3. If the visitor seems interested, gently ask for contact info before they leave:
-   - "Before you go, can I get your email so we can follow up with any updates?"
+   - "Before you go, can I get your LinkedIn URL so we can stay in touch?"
 
 4. Track what they're interested in and use it as leverage:
-   - "Since you're interested in [topic], I can have our specialist reach out - just need your contact info!"
+   - "Since you're interested in [topic], I can have our specialist reach out to your team - just need your company name!"
 
 **DO NOT**: Be pushy or ask for contact info more than twice if declined. Respect their decision.`,
 
@@ -586,6 +614,59 @@ ${contextSection}`;
       has_context: hasContext,
       sources_used: sources.length,
     });
+
+    // Lead capture detection and processing
+    const leadInfo = extractLeadInfo(message);
+    if (leadInfo.email || leadInfo.linkedin || leadInfo.company || leadInfo.name) {
+      console.log("Potential lead info detected:", leadInfo);
+      try {
+        const { error: leadError } = await supabase
+          .from("leads")
+          .upsert({
+            chatbot_id,
+            conversation_id: currentConversationId,
+            email: leadInfo.email || null,
+            name: leadInfo.name || null,
+            phone: null,
+            company_name: leadInfo.company || null,
+            linkedin_url: leadInfo.linkedin || null,
+          }, { 
+            onConflict: 'conversation_id, email',
+            ignoreDuplicates: false 
+          });
+
+        if (!leadError) {
+          console.log("Lead captured/updated successfully");
+          // Update conversation to mark as having a lead
+          await supabase
+            .from("conversations")
+            .update({ has_lead: true })
+            .eq("id", currentConversationId);
+            
+          // Trigger enrichment by calling the capture-lead function
+          // We use the internal service role to call it
+          fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/capture-lead`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              chatbot_id,
+              conversation_id: currentConversationId,
+              email: leadInfo.email,
+              name: leadInfo.name,
+              company_name: leadInfo.company,
+              linkedin_url: leadInfo.linkedin,
+            })
+          }).catch(err => console.error("Enrichment trigger failed:", err));
+        } else {
+          console.error("Lead capture error:", leadError);
+        }
+      } catch (err) {
+        console.error("Lead capture processing failed:", err);
+      }
+    }
 
     // Update conversation with primary intent and message count
     await supabase
