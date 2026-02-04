@@ -3,8 +3,6 @@ import { useRef } from "react";
 import { Check, Sparkles, Zap, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useDodoCheckout } from "@/hooks/useDodoCheckout";
-import { useAuth } from "@/hooks/useAuth";
 
 interface PricingTiersProps {
   isYearly: boolean;
@@ -75,8 +73,6 @@ const plans = [
 export const PricingTiers = ({ isYearly }: PricingTiersProps) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const { user } = useAuth();
-  const { createCheckoutSession, loading } = useDodoCheckout();
 
   return (
     <section className="py-8 sm:py-12 relative">
@@ -195,8 +191,8 @@ export const PricingTiers = ({ isYearly }: PricingTiersProps) => {
                       ))}
                     </ul>
 
-                    {/* CTA */}
-                    {user ? (
+                    {/* CTA - Always redirect to login */}
+                    <Link to="/login">
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button
                           className={`w-full h-12 font-medium ${
@@ -205,28 +201,11 @@ export const PricingTiers = ({ isYearly }: PricingTiersProps) => {
                               : "bg-secondary hover:bg-secondary/80"
                           } transition-all duration-300`}
                           size="lg"
-                          onClick={() => createCheckoutSession(plan.name.toLowerCase() as any)}
-                          disabled={loading}
                         >
-                          {loading ? "Processing..." : plan.cta}
+                          {plan.cta}
                         </Button>
                       </motion.div>
-                    ) : (
-                      <Link to="/signup">
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          <Button
-                            className={`w-full h-12 font-medium ${
-                              plan.popular
-                                ? "gradient-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30"
-                                : "bg-secondary hover:bg-secondary/80"
-                            } transition-all duration-300`}
-                            size="lg"
-                          >
-                            {plan.cta}
-                          </Button>
-                        </motion.div>
-                      </Link>
-                    )}
+                    </Link>
                   </div>
                 </motion.div>
               </motion.div>
