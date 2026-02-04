@@ -87,7 +87,7 @@ function SidebarContents() {
       {/* Logo */}
       <div className="p-4 border-b border-border/50">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <img src={chatveroLogo} alt="Chatvero" className="w-12 h-12 object-contain" />
+          <img src={chatveroLogo} alt="Chatvero" className="w-14 h-14 object-contain" />
           {!collapsed && (
             <span className="font-display font-bold text-xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               Chatvero
