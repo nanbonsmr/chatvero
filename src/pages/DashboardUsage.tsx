@@ -95,7 +95,47 @@ const DashboardUsagePage = () => {
             </p>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile: Card Layout */}
+          <div className="block sm:hidden p-4 space-y-3">
+            {Object.entries(PLAN_LIMITS).map(([key, plan]) => (
+              <div
+                key={key}
+                className={`p-4 rounded-lg border ${
+                  planData?.plan === key 
+                    ? "border-primary/50 bg-primary/5" 
+                    : "border-border/30 bg-muted/20"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-semibold">{plan.name}</span>
+                  {planData?.plan === key && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                      Current
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs">Chatbots</p>
+                    <p className="font-medium">
+                      {plan.chatbots === Infinity ? "Unlimited" : plan.chatbots}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Messages/Month</p>
+                    <p className="font-medium">
+                      {plan.messagesPerMonth === Infinity
+                        ? "Unlimited"
+                        : plan.messagesPerMonth.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: Table Layout */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/50">
