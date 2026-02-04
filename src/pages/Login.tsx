@@ -4,9 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MessageSquare, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import chatveroLogo from "@/assets/chatvero-logo.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -83,8 +84,8 @@ const Login = () => {
         <div className="bg-card rounded-2xl shadow-elevated border border-border p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-4">
-              <MessageSquare className="w-6 h-6 text-primary-foreground" />
+            <div className="w-12 h-12 mx-auto mb-4">
+              <img src={chatveroLogo} alt="Chatvero" className="w-full h-full object-contain" />
             </div>
             <h1 className="font-display text-2xl font-bold mb-2">Welcome back</h1>
             <p className="text-muted-foreground">

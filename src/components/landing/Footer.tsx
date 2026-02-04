@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { MessageSquare, Twitter, Github, Linkedin, Sparkles } from "lucide-react";
+import { Twitter, Github, Linkedin } from "lucide-react";
+import chatveroLogo from "@/assets/chatvero-logo.png";
 
 const footerLinks = {
   product: [
@@ -47,17 +48,10 @@ export const Footer = () => {
           <div className="col-span-2">
             <Link to="/" className="flex items-center gap-2.5 mb-6 group">
               <motion.div 
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                className="relative w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/20"
+                whileHover={{ scale: 1.05 }}
+                className="w-10 h-10"
               >
-                <MessageSquare className="w-5 h-5 text-primary-foreground" />
-                <motion.div 
-                  className="absolute -top-1 -right-1"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Sparkles className="w-3 h-3 text-accent" />
-                </motion.div>
+                <img src={chatveroLogo} alt="Chatvero" className="w-full h-full object-contain" />
               </motion.div>
               <span className="font-display font-bold text-lg sm:text-xl tracking-tight">Chatvero</span>
             </Link>

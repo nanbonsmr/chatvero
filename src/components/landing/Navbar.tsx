@@ -2,8 +2,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, MessageSquare, Sparkles } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import chatveroLogo from "@/assets/chatvero-logo.png";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,18 +28,11 @@ export const Navbar = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group">
               <motion.div 
-                whileHover={{ scale: 1.05, rotate: 5 }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/25"
+                className="w-8 h-8 sm:w-10 sm:h-10"
               >
-                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
-                <motion.div 
-                  className="absolute -top-1 -right-1 hidden sm:block"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Sparkles className="w-3 h-3 text-accent" />
-                </motion.div>
+                <img src={chatveroLogo} alt="Chatvero" className="w-full h-full object-contain" />
               </motion.div>
               <span className="font-display font-bold text-lg sm:text-xl tracking-tight">Chatvero</span>
             </Link>
