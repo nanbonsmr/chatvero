@@ -39,6 +39,7 @@ import {
   Bot,
   Menu,
   FileText,
+  CreditCard,
 } from "lucide-react";
 import chatveroLogo from "@/assets/chatvero-logo.png";
 
@@ -209,6 +210,18 @@ function SidebarContents() {
                   <Link to="/analytics">
                     <BarChart3 className="w-4 h-4" />
                     {!collapsed && <span>Global Analytics</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname === "/dashboard/pricing"}
+                  tooltip={collapsed ? "Pricing" : undefined}
+                >
+                  <Link to="/dashboard/pricing">
+                    <CreditCard className="w-4 h-4" />
+                    {!collapsed && <span>Pricing</span>}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
