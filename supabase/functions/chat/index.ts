@@ -622,7 +622,7 @@ ${contextSection}`;
       try {
         const { error: leadError } = await supabase
           .from("leads")
-          .upsert({
+          .insert({
             chatbot_id,
             conversation_id: currentConversationId,
             email: leadInfo.email || null,
@@ -630,13 +630,12 @@ ${contextSection}`;
             phone: null,
             company_name: leadInfo.company || null,
             linkedin_url: leadInfo.linkedin || null,
-          }, { 
-            onConflict: 'conversation_id, email',
-            ignoreDuplicates: false 
           });
 
-        if (!leadError) {
-          console.log("Lead captured/updated successfully");
+        if (leadError) {
+          console.error("Lead insert error:", leadError);
+        } else {
+          console.log("Lead inserted successfully");
           // Update conversation to mark as having a lead
           await supabase
             .from("conversations")
@@ -644,7 +643,6 @@ ${contextSection}`;
             .eq("id", currentConversationId);
             
           // Trigger enrichment by calling the capture-lead function
-          // We use the internal service role to call it
           fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/capture-lead`, {
             method: 'POST',
             headers: {
@@ -660,8 +658,6 @@ ${contextSection}`;
               linkedin_url: leadInfo.linkedin,
             })
           }).catch(err => console.error("Enrichment trigger failed:", err));
-        } else {
-          console.error("Lead capture error:", leadError);
         }
       } catch (err) {
         console.error("Lead capture processing failed:", err);
