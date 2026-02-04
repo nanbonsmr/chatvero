@@ -15,28 +15,21 @@ export const useDodoCheckout = () => {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dodo-checkout`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ plan }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("dodo-checkout", {
+        body: { plan },
+      });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create checkout session");
+      if (error) {
+        throw new Error(error.message || "Failed to create checkout session");
       }
 
-      const { checkout_url } = await response.json();
+      const checkout_url = (data as any)?.checkout_url as string | undefined;
       
       // Redirect to Dodo checkout
       if (checkout_url) {
         window.location.href = checkout_url;
+      } else {
+        throw new Error("Missing checkout_url from server");
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";

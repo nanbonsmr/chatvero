@@ -65,39 +65,55 @@ if (import.meta.main) {
         business: Deno.env.get("DODO_BUSINESS_PRODUCT_ID") || "prod_business",
       };
 
-      const apiKey = Deno.env.get("DODO_API_KEY");
-      if (!apiKey) {
+      const rawApiKey = Deno.env.get("DODO_API_KEY");
+      if (!rawApiKey) {
         throw new Error("DODO_API_KEY not configured");
       }
+
+      // Normalize API key: users sometimes paste `Bearer xxx`.
+      const apiKey = rawApiKey.trim().toLowerCase().startsWith("bearer ")
+        ? rawApiKey.trim().slice("bearer ".length).trim()
+        : rawApiKey.trim();
 
       // Determine the redirect base URL
       const origin = req.headers.get("origin") || "https://embedbot.lovable.app";
 
       // Use test or live endpoint based on environment
-      const dodoBaseUrl = Deno.env.get("DODO_ENV") === "live" 
-        ? "https://live.dodopayments.com" 
+      const dodoEnv = (Deno.env.get("DODO_ENV") ?? "").trim().toLowerCase();
+      const inferredMode: "live" | "test" =
+        ["live", "live_mode", "prod", "production"].includes(dodoEnv)
+          ? "live"
+          : ["test", "test_mode", "sandbox"].includes(dodoEnv)
+            ? "test"
+            : apiKey.toLowerCase().includes("live")
+              ? "live"
+              : "test";
+
+      const dodoBaseUrl = inferredMode === "live"
+        ? "https://live.dodopayments.com"
         : "https://test.dodopayments.com";
 
       // Create checkout session with Dodo
+      // Matches docs: https://docs.dodopayments.com/api-reference/checkout-sessions/create
       const requestBody = {
         product_cart: [
           {
             product_id: planMap[plan],
             quantity: 1,
-          }
+          },
         ],
         customer: {
           email: user.email,
         },
-        payment_link: true,
         return_url: `${origin}/dashboard?payment=success`,
         metadata: {
           user_id: user.id,
-          plan: plan,
+          plan,
         },
       };
 
       console.log("Dodo request URL:", `${dodoBaseUrl}/checkouts`);
+      console.log("Dodo mode:", inferredMode);
       console.log("Dodo request body:", JSON.stringify(requestBody));
       console.log("Product ID being used:", planMap[plan]);
 
@@ -108,6 +124,7 @@ if (import.meta.main) {
           headers: {
             "Authorization": `Bearer ${apiKey}`,
             "Content-Type": "application/json",
+            "Accept": "application/json",
           },
           body: JSON.stringify(requestBody),
         }
@@ -119,7 +136,9 @@ if (import.meta.main) {
       console.log("Dodo response body:", responseText);
 
       if (!checkoutResponse.ok) {
-        throw new Error(`Dodo API error (${checkoutResponse.status}): ${responseText}`);
+        throw new Error(
+          `Dodo API error (${checkoutResponse.status}): ${responseText || "<empty response>"}`
+        );
       }
 
       const checkoutData = JSON.parse(responseText);
