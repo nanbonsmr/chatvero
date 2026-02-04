@@ -5,16 +5,16 @@ import chatveroLogo from "@/assets/chatvero-logo.png";
 
 const footerLinks = {
   product: [
-    { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
+    { name: "Features", href: "/features" },
+    { name: "How It Works", href: "/how-it-works" },
+    { name: "Pricing", href: "/pricing" },
     { name: "Integrations", href: "#" },
-    { name: "Changelog", href: "#" },
   ],
   company: [
     { name: "About", href: "#" },
     { name: "Blog", href: "#" },
     { name: "Careers", href: "#" },
-    { name: "Contact", href: "#" },
+    { name: "Contact", href: "/contact" },
   ],
   resources: [
     { name: "Documentation", href: "#" },
@@ -23,9 +23,9 @@ const footerLinks = {
     { name: "Status", href: "#" },
   ],
   legal: [
-    { name: "Privacy", href: "#" },
-    { name: "Terms", href: "#" },
-    { name: "Cookie Policy", href: "#" },
+    { name: "Privacy", href: "/privacy" },
+    { name: "Terms", href: "/terms" },
+    { name: "Cookie Policy", href: "/cookies" },
     { name: "GDPR", href: "#" },
   ],
 };
@@ -87,12 +87,12 @@ export const Footer = () => {
               <ul className="space-y-2 sm:space-y-3">
                 {links.map((link) => (
                   <li key={link.name}>
-                    <a
-                      href={link.href}
+                    <Link
+                      to={link.href}
                       className="text-muted-foreground hover:text-foreground text-xs sm:text-sm transition-colors duration-200 hover:translate-x-0.5 inline-block"
                     >
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
