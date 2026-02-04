@@ -24,6 +24,7 @@ import Analytics from "./pages/Analytics";
 import Leads from "./pages/Leads";
 import NotFound from "./pages/NotFound";
 import Pricing from "./pages/Pricing";
+import DashboardPricing from "./pages/DashboardPricing";
 import Features from "./pages/Features";
 import HowItWorks from "./pages/HowItWorks";
 import Contact from "./pages/Contact";
@@ -54,6 +55,7 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard/pricing" element={<ProtectedRoute><DashboardPricing /></ProtectedRoute>} />
               <Route path="/create-chatbot" element={<ProtectedRoute><CreateChatbot /></ProtectedRoute>} />
               <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
               <Route path="/conversations" element={<ProtectedRoute><Conversations /></ProtectedRoute>} />
