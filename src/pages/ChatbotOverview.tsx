@@ -263,33 +263,33 @@ const ChatbotOverview = () => {
                 {recentConversations.map((conv) => (
                   <div
                     key={conv.id}
-                    className="group flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/60 transition-all cursor-pointer border border-transparent hover:border-border/50"
+                    className="group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-secondary/30 hover:bg-secondary/60 transition-all cursor-pointer border border-transparent hover:border-border/50"
                     onClick={() => navigate(`/chatbot/${id}/conversations`)}
                   >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-primary" />
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                      <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium truncate">
-                          {conv.visitor_id.substring(0, 8)}...
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-center justify-between gap-1 sm:gap-2">
+                        <span className="text-xs sm:text-sm font-medium truncate max-w-[80px] sm:max-w-none">
+                          {conv.visitor_id.substring(0, 6)}
                         </span>
-                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground flex-shrink-0">
-                          <Clock className="w-3 h-3" />
-                          {formatDistanceToNow(new Date(conv.started_at), { addSuffix: true })}
+                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-muted-foreground flex-shrink-0">
+                          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 hidden sm:block" />
+                          <span className="truncate max-w-[60px] sm:max-w-none">
+                            {formatDistanceToNow(new Date(conv.started_at), { addSuffix: true }).replace(' ago', '')}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <p className="text-xs text-muted-foreground truncate">
+                      <div className="flex items-center justify-between gap-1 sm:gap-2 mt-0.5">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate flex-1">
                           {conv.last_message 
-                            ? conv.last_message.length > 40 
-                              ? `${conv.last_message.substring(0, 40)}...` 
-                              : conv.last_message
+                            ? conv.last_message.substring(0, 25) + (conv.last_message.length > 25 ? '...' : '')
                             : "No messages"
                           }
                         </p>
-                        <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded flex-shrink-0">
-                          {conv.message_count} msgs
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground bg-secondary px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                          {conv.message_count}
                         </span>
                       </div>
                     </div>
