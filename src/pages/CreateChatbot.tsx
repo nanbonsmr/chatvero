@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateChatbot } from "@/hooks/useChatbots";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 
 const tones = [
   { id: "professional", label: "Professional", description: "Formal and business-focused", icon: "💼" },
@@ -77,9 +78,19 @@ const CreateChatbot = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { data: planData, isLoading: planLoading } = usePlanLimits();
   const createChatbot = useCreateChatbot();
 
   const handleSourceSelect = (source: SourceType) => {
+    // Check if user can create more chatbots
+    if (planData && !planData.canCreateChatbot) {
+      toast({
+        title: "Chatbot limit reached",
+        description: `Your ${planData.limits.name} plan allows ${planData.limits.chatbots} chatbot(s). Please upgrade to create more.`,
+        variant: "destructive",
+      });
+      return;
+    }
     setSourceType(source);
     setStep(2);
   };
@@ -343,9 +354,24 @@ const CreateChatbot = () => {
               <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-3">
                 How would you like to train your AI?
               </h1>
-              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
                 Choose your knowledge source to create a powerful, customized chatbot.
               </p>
+
+              {/* Limit warning */}
+              {planData && !planData.canCreateChatbot && (
+                <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 max-w-md mx-auto">
+                  <p className="text-sm text-destructive font-medium">
+                    You've reached your chatbot limit ({planData.usage.chatbotsUsed}/{planData.limits.chatbots})
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <Link to="/dashboard/pricing" className="text-primary hover:underline">
+                      Upgrade your plan
+                    </Link>{" "}
+                    to create more chatbots.
+                  </p>
+                </div>
+              )}
 
               <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
                 {/* Website Option */}
