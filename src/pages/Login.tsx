@@ -84,7 +84,7 @@ const Login = () => {
         <div className="bg-card rounded-2xl shadow-elevated border border-border p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4">
+            <div className="w-20 h-20 mx-auto mb-4">
               <img src={chatveroLogo} alt="Chatvero" className="w-full h-full object-contain" />
             </div>
             <h1 className="font-display text-2xl font-bold mb-2">Welcome back</h1>

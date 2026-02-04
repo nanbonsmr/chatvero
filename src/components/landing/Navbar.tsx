@@ -30,7 +30,7 @@ export const Navbar = () => {
               <motion.div 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-10 h-10 sm:w-12 sm:h-12"
+                className="w-12 h-12 sm:w-14 sm:h-14"
               >
                 <img src={chatveroLogo} alt="Chatvero" className="w-full h-full object-contain" />
               </motion.div>
