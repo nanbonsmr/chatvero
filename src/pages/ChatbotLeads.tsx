@@ -23,6 +23,7 @@ import {
   Loader2,
   Users,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const ChatbotLeads = () => {
   const { id: chatbotId } = useParams<{ id: string }>();
@@ -105,8 +106,8 @@ const ChatbotLeads = () => {
             </div>
           ) : filteredLeads.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-green-500" />
+              <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-primary" />
               </div>
               <h3 className="font-semibold text-lg mb-2">No leads yet</h3>
               <p className="text-muted-foreground">
@@ -118,8 +119,10 @@ const ChatbotLeads = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Contact</TableHead>
+                  <TableHead>Company</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Captured</TableHead>
                 </TableRow>
               </TableHeader>
@@ -128,11 +131,14 @@ const ChatbotLeads = () => {
                   <TableRow key={lead.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
-                          <User className="w-5 h-5 text-green-500" />
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                          <User className="w-5 h-5 text-primary" />
                         </div>
                         <span className="font-medium">{lead.name || "—"}</span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{lead.company_name || "—"}</span>
                     </TableCell>
                     <TableCell>
                       {lead.email ? (
@@ -159,6 +165,14 @@ const ChatbotLeads = () => {
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={
+                        lead.enrichment_status === 'completed' ? 'default' : 
+                        lead.enrichment_status === 'failed' ? 'destructive' : 'secondary'
+                      }>
+                        {lead.enrichment_status || 'pending'}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}

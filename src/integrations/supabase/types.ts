@@ -304,31 +304,43 @@ export type Database = {
       leads: {
         Row: {
           chatbot_id: string
+          company_name: string | null
           conversation_id: string | null
           created_at: string
           custom_data: Json | null
           email: string | null
+          enriched_data: Json | null
+          enrichment_status: string | null
           id: string
+          linkedin_url: string | null
           name: string | null
           phone: string | null
         }
         Insert: {
           chatbot_id: string
+          company_name?: string | null
           conversation_id?: string | null
           created_at?: string
           custom_data?: Json | null
           email?: string | null
+          enriched_data?: Json | null
+          enrichment_status?: string | null
           id?: string
+          linkedin_url?: string | null
           name?: string | null
           phone?: string | null
         }
         Update: {
           chatbot_id?: string
+          company_name?: string | null
           conversation_id?: string | null
           created_at?: string
           custom_data?: Json | null
           email?: string | null
+          enriched_data?: Json | null
+          enrichment_status?: string | null
           id?: string
+          linkedin_url?: string | null
           name?: string | null
           phone?: string | null
         }
