@@ -5,6 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useChatbots, useDeleteChatbot } from "@/hooks/useChatbots";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SubscriptionCard } from "@/components/dashboard/SubscriptionCard";
+import { DashboardPricing } from "@/components/dashboard/DashboardPricing";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +42,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { data: chatbots = [], isLoading } = useChatbots();
+  const { data: subscription } = useSubscription();
   const deleteChatbot = useDeleteChatbot();
 
   const handleDelete = async (botId: string) => {
@@ -140,6 +143,9 @@ const Dashboard = () => {
           <h2 className="font-display text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Your Subscription</h2>
           <SubscriptionCard />
         </div>
+
+        {/* Pricing Section */}
+        <DashboardPricing currentPlan={subscription?.plan} />
 
         {/* Chatbots Grid */}
         <div>
