@@ -65,7 +65,7 @@ export const ChatWidgetPreview = () => {
                 />
               </motion.div>
               <div>
-                <h4 className="font-semibold text-primary-foreground text-xs sm:text-sm">EmbedAI Assistant</h4>
+                <h4 className="font-semibold text-primary-foreground text-xs sm:text-sm">Chatvero Assistant</h4>
                 <div className="flex items-center gap-1 sm:gap-1.5">
                   <motion.div 
                     className="w-1.5 h-1.5 rounded-full bg-green-400"
