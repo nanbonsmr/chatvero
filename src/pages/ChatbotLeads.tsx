@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useLeads, useDeleteLead } from "@/hooks/useLeads";
+import { useLeads, useDeleteLead, useBulkDeleteLeads } from "@/hooks/useLeads";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   Search,
@@ -46,6 +46,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Lead } from "@/hooks/useLeads";
 import { useToast } from "@/hooks/use-toast";
 
@@ -54,25 +55,72 @@ const ChatbotLeads = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   
   const { toast } = useToast();
   const { data: allLeads = [], isLoading } = useLeads();
   const deleteLead = useDeleteLead();
+  const bulkDeleteLeads = useBulkDeleteLeads();
   
   // Filter leads for this chatbot
   const leads = useMemo(() => {
     return allLeads.filter(lead => lead.chatbot_id === chatbotId);
   }, [allLeads, chatbotId]);
 
-  const filteredLeads = leads.filter((lead) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      lead.email?.toLowerCase().includes(query) ||
-      lead.name?.toLowerCase().includes(query) ||
-      lead.phone?.toLowerCase().includes(query)
-    );
-  });
+  const filteredLeads = useMemo(() => {
+    return leads.filter((lead) => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        lead.email?.toLowerCase().includes(query) ||
+        lead.name?.toLowerCase().includes(query) ||
+        lead.phone?.toLowerCase().includes(query)
+      );
+    });
+  }, [leads, searchQuery]);
+
+  const allSelected = filteredLeads.length > 0 && filteredLeads.every(lead => selectedLeadIds.has(lead.id));
+  const someSelected = filteredLeads.some(lead => selectedLeadIds.has(lead.id));
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedLeadIds(new Set());
+    } else {
+      setSelectedLeadIds(new Set(filteredLeads.map(lead => lead.id)));
+    }
+  };
+
+  const toggleSelectLead = (leadId: string) => {
+    const newSelected = new Set(selectedLeadIds);
+    if (newSelected.has(leadId)) {
+      newSelected.delete(leadId);
+    } else {
+      newSelected.add(leadId);
+    }
+    setSelectedLeadIds(newSelected);
+  };
+
+  const handleBulkDelete = () => {
+    bulkDeleteLeads.mutate(Array.from(selectedLeadIds), {
+      onSuccess: () => {
+        toast({
+          title: "Leads deleted",
+          description: `Successfully deleted ${selectedLeadIds.size} lead${selectedLeadIds.size !== 1 ? "s" : ""}.`,
+        });
+        setSelectedLeadIds(new Set());
+        setShowBulkDeleteDialog(false);
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: "Failed to delete leads. Please try again.",
+          variant: "destructive",
+        });
+        console.error("Bulk delete error:", error);
+      },
+    });
+  };
 
   const exportToCSV = () => {
     const headers = ["Name", "Email", "Phone", "Captured At"];
@@ -105,10 +153,23 @@ const ChatbotLeads = () => {
             <h1 className="font-display text-xl sm:text-2xl font-bold">Leads</h1>
             <p className="text-muted-foreground text-sm">Captured contact information</p>
           </div>
-          <Button size="sm" onClick={exportToCSV} disabled={filteredLeads.length === 0} className="w-full sm:w-auto">
-            <Download className="w-4 h-4" />
-            Export CSV
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            {selectedLeadIds.size > 0 && (
+              <Button 
+                size="sm" 
+                variant="destructive"
+                onClick={() => setShowBulkDeleteDialog(true)}
+                className="w-full sm:w-auto"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete ({selectedLeadIds.size})
+              </Button>
+            )}
+            <Button size="sm" onClick={exportToCSV} disabled={filteredLeads.length === 0} className="w-full sm:w-auto">
+              <Download className="w-4 h-4" />
+              Export CSV
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
@@ -146,6 +207,14 @@ const ChatbotLeads = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all"
+                      className={someSelected && !allSelected ? "opacity-50" : ""}
+                    />
+                  </TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Company</TableHead>
                   <TableHead>Email</TableHead>
@@ -157,7 +226,14 @@ const ChatbotLeads = () => {
               </TableHeader>
               <TableBody>
                 {filteredLeads.map((lead) => (
-                  <TableRow key={lead.id}>
+                  <TableRow key={lead.id} className={selectedLeadIds.has(lead.id) ? "bg-muted/50" : ""}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedLeadIds.has(lead.id)}
+                        onCheckedChange={() => toggleSelectLead(lead.id)}
+                        aria-label={`Select ${lead.name || lead.email || "lead"}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -383,6 +459,31 @@ const ChatbotLeads = () => {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   "Delete"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {selectedLeadIds.size} Lead{selectedLeadIds.size !== 1 ? "s" : ""}</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {selectedLeadIds.size} selected lead{selectedLeadIds.size !== 1 ? "s" : ""}?
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={handleBulkDelete}
+              >
+                {bulkDeleteLeads.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  `Delete ${selectedLeadIds.size} Lead${selectedLeadIds.size !== 1 ? "s" : ""}`
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>
