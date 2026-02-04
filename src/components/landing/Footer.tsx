@@ -59,7 +59,7 @@ export const Footer = () => {
                   <Sparkles className="w-3 h-3 text-accent" />
                 </motion.div>
               </motion.div>
-              <span className="font-display font-bold text-lg sm:text-xl tracking-tight">EmbedAI</span>
+              <span className="font-display font-bold text-lg sm:text-xl tracking-tight">Chatvero</span>
             </Link>
             <p className="text-muted-foreground text-xs sm:text-sm mb-6 sm:mb-8 max-w-xs leading-relaxed">
               Turn your website into an AI-powered lead generation machine. No coding required.
@@ -109,7 +109,7 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 sm:pt-10 border-t border-border/50 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
           <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-            © {new Date().getFullYear()} EmbedAI. All rights reserved.
+            © {new Date().getFullYear()} Chatvero. All rights reserved.
           </p>
           <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
             Made with <span className="text-red-500">❤️</span> for businesses that want to grow

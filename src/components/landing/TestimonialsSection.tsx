@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 const testimonials = [
   {
-    quote: "EmbedAI transformed our customer support. We reduced response time by 80% and our customers love the instant answers.",
+    quote: "Chatvero transformed our customer support. We reduced response time by 80% and our customers love the instant answers.",
     author: "Sarah Chen",
     role: "Head of Support",
     company: "TechFlow",
@@ -31,7 +31,7 @@ const testimonials = [
     rating: 5,
   },
   {
-    quote: "We've seen a 3x increase in qualified leads since implementing EmbedAI. It captures visitor information seamlessly.",
+    quote: "We've seen a 3x increase in qualified leads since implementing Chatvero. It captures visitor information seamlessly.",
     author: "David Park",
     role: "Marketing VP",
     company: "GrowthLabs",

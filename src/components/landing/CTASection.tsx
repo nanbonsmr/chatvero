@@ -87,7 +87,7 @@ export const CTASection = () => {
             transition={{ delay: 0.4 }}
             className="text-base sm:text-lg md:text-xl text-white/80 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed px-4 sm:px-0"
           >
-            Join thousands of businesses using EmbedAI to engage visitors and capture leads automatically.
+            Join thousands of businesses using Chatvero to engage visitors and capture leads automatically.
           </motion.p>
 
           <motion.div

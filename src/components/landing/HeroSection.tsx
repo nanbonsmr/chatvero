@@ -209,7 +209,7 @@ export const HeroSection = () => {
                   <span className="text-xs sm:text-sm font-semibold ml-1">4.9</span>
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">2,000+</span> businesses trust EmbedAI
+                  <span className="font-semibold text-foreground">2,000+</span> businesses trust Chatvero
                 </p>
               </div>
             </motion.div>

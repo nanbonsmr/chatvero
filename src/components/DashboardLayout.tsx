@@ -92,7 +92,7 @@ function SidebarContents() {
           </div>
           {!collapsed && (
             <span className="font-display font-bold text-xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-              EmbedAI
+              Chatvero
             </span>
           )}
         </Link>

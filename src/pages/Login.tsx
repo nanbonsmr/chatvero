@@ -88,7 +88,7 @@ const Login = () => {
             </div>
             <h1 className="font-display text-2xl font-bold mb-2">Welcome back</h1>
             <p className="text-muted-foreground">
-              Sign in to your EmbedAI account
+              Sign in to your Chatvero account
             </p>
           </div>
 

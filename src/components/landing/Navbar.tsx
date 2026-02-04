@@ -40,7 +40,7 @@ export const Navbar = () => {
                   <Sparkles className="w-3 h-3 text-accent" />
                 </motion.div>
               </motion.div>
-              <span className="font-display font-bold text-lg sm:text-xl tracking-tight">EmbedAI</span>
+              <span className="font-display font-bold text-lg sm:text-xl tracking-tight">Chatvero</span>
             </Link>
 
             {/* Desktop Nav */}
