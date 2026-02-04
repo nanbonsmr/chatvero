@@ -180,30 +180,168 @@ function detectIntent(message: string): string {
   return "general";
 }
 
-// Extract lead info from message
-function extractLeadInfo(message: string): { email?: string; linkedin?: string; company?: string; name?: string } {
-  const info: any = {};
+// Advanced lead extraction interface
+interface ExtractedLeadInfo {
+  email?: string;
+  phone?: string;
+  linkedin?: string;
+  company?: string;
+  name?: string;
+  jobTitle?: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+// Enhanced lead extraction with multiple patterns and confidence scoring
+function extractLeadInfo(message: string, conversationHistory?: { role: string; content: string }[]): ExtractedLeadInfo {
+  const info: ExtractedLeadInfo = { confidence: 'low' };
+  const allMessages = conversationHistory 
+    ? [...conversationHistory.map(m => m.content), message].join(' ')
+    : message;
   
-  // Email regex
-  const emailMatch = message.match(/[\w.-]+@[\w.-]+\.\w+/);
-  if (emailMatch) info.email = emailMatch[0];
+  // === EMAIL EXTRACTION (Multiple patterns) ===
+  const emailPatterns = [
+    // Standard email
+    /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/gi,
+    // Email with "at" spelled out
+    /\b([a-zA-Z0-9._%+-]+)\s*(?:at|@)\s*([a-zA-Z0-9.-]+)\s*(?:dot|\.)\s*([a-zA-Z]{2,})\b/gi,
+  ];
   
-  // LinkedIn regex
-  const linkedinMatch = message.match(/(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w-]+\/?/);
-  if (linkedinMatch) info.linkedin = linkedinMatch[0];
-  
-  // Very basic company detection (usually after "at" or "from")
-  const companyMatch = message.match(/\b(at|from|with)\s+([A-Z][\w\s&]+?)(?=\s|$|\.|\,)/);
-  if (companyMatch && companyMatch[2].length > 2) {
-    info.company = companyMatch[2].trim();
+  for (const pattern of emailPatterns) {
+    const match = message.match(pattern);
+    if (match) {
+      info.email = match[0].toLowerCase().replace(/\s*(at|dot)\s*/gi, m => m.includes('at') ? '@' : '.');
+      break;
+    }
   }
 
-  // Basic name detection (e.g. "I'm [Name]" or "My name is [Name]")
-  const nameMatch = message.match(/\b(my name is|i am|i'm)\s+([A-Z][a-z]+(\s+[A-Z][a-z]+)?)/i);
-  if (nameMatch) {
-    info.name = nameMatch[2].trim();
-  }
+  // === PHONE EXTRACTION (Multiple international formats) ===
+  const phonePatterns = [
+    // US/CA formats: (123) 456-7890, 123-456-7890, 123.456.7890
+    /\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b/g,
+    // International with + prefix
+    /\b\+[0-9]{1,4}[-.\s]?[0-9]{1,4}[-.\s]?[0-9]{2,4}[-.\s]?[0-9]{2,4}[-.\s]?[0-9]{0,4}\b/g,
+    // 10-digit continuous
+    /\b[0-9]{10,12}\b/g,
+    // With country code spelled: "my number is 555 123 4567"
+    /(?:phone|call|text|reach|number|cell|mobile)(?:\s*(?:is|:))?\s*([+]?[0-9\s\-().]{10,})/gi,
+  ];
   
+  for (const pattern of phonePatterns) {
+    const matches = message.matchAll(pattern);
+    for (const match of matches) {
+      const phone = (match[1] || match[0]).replace(/[^\d+]/g, '');
+      if (phone.length >= 10 && phone.length <= 15) {
+        info.phone = phone.startsWith('+') ? phone : (phone.length === 10 ? `+1${phone}` : phone);
+        break;
+      }
+    }
+    if (info.phone) break;
+  }
+
+  // === LINKEDIN EXTRACTION (Multiple URL formats) ===
+  const linkedinPatterns = [
+    // Full URL
+    /(https?:\/\/)?(www\.)?linkedin\.com\/in\/([a-zA-Z0-9_-]+)\/?/gi,
+    // Just the username mention
+    /linkedin[:\s]+([a-zA-Z0-9_-]+)/gi,
+    // "find me on linkedin as username"
+    /(?:linkedin|linked in)(?:\s+(?:is|as|at|profile))?\s*[:\s]+\/?([a-zA-Z0-9_-]+)/gi,
+  ];
+  
+  for (const pattern of linkedinPatterns) {
+    const match = message.match(pattern);
+    if (match) {
+      // Normalize to full URL
+      const username = match[0].replace(/.*linkedin\.com\/in\//i, '').replace(/.*linkedin[:\s]+/i, '').replace(/\//g, '');
+      if (username && username.length > 2 && !username.includes('http')) {
+        info.linkedin = `https://linkedin.com/in/${username}`;
+      } else if (match[0].includes('linkedin.com')) {
+        info.linkedin = match[0].startsWith('http') ? match[0] : `https://${match[0]}`;
+      }
+      break;
+    }
+  }
+
+  // === NAME EXTRACTION (Multiple patterns) ===
+  const namePatterns = [
+    // Explicit introduction patterns
+    /\b(?:my name is|i am|i'm|this is|call me|it's)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b/gi,
+    // "Name here" or "- Name" signatures
+    /(?:^|\n)[-–]\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*$/gm,
+    // Name with title: "John Smith, CEO"
+    /\b([A-Z][a-z]+\s+[A-Z][a-z]+)(?:,?\s*(?:CEO|CTO|CFO|COO|VP|Director|Manager|Engineer|Developer))/gi,
+    // "Best, Name" or "Thanks, Name" signatures
+    /(?:best|thanks|regards|cheers|sincerely)[,\s]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*$/gi,
+  ];
+  
+  for (const pattern of namePatterns) {
+    const match = message.match(pattern);
+    if (match && match[1]) {
+      const name = match[1].trim();
+      // Filter out common false positives
+      const falsePositives = ['The', 'This', 'That', 'What', 'When', 'Where', 'How', 'Here', 'There', 'Hello', 'Thanks'];
+      if (!falsePositives.includes(name.split(' ')[0])) {
+        info.name = name;
+        break;
+      }
+    }
+  }
+
+  // === COMPANY NAME EXTRACTION ===
+  const companyPatterns = [
+    // "at Company" or "from Company" or "work for Company"
+    /(?:at|from|with|work(?:ing)?\s+(?:at|for)|employed\s+(?:at|by))\s+([A-Z][A-Za-z0-9\s&.,]+?)(?:\s+(?:as|where|and|,|\.|$))/gi,
+    // "Company name is X"
+    /(?:company|organization|firm|business|employer)\s+(?:is|called|named)?\s*([A-Z][A-Za-z0-9\s&.]+?)(?:\s+(?:and|,|\.|$))/gi,
+    // "X Inc/Corp/LLC/Ltd"
+    /\b([A-Z][A-Za-z0-9\s&]+?)\s+(?:Inc\.?|Corp\.?|LLC|Ltd\.?|Limited|Company|Co\.?|Group|Technologies|Tech|Solutions|Software|Systems)\b/gi,
+  ];
+  
+  for (const pattern of companyPatterns) {
+    const match = message.match(pattern);
+    if (match && match[1]) {
+      const company = match[1].trim().replace(/[,.\s]+$/, '');
+      // Filter out common false positives and ensure minimum length
+      if (company.length > 2 && !['The', 'A', 'An', 'My', 'Our'].includes(company)) {
+        info.company = company;
+        break;
+      }
+    }
+  }
+
+  // === JOB TITLE EXTRACTION ===
+  const titlePatterns = [
+    // "I am a/the [Title]"
+    /(?:i am|i'm)\s+(?:a|an|the)?\s*((?:Senior|Junior|Lead|Chief|Head|Principal|Staff)?\s*(?:Software|Product|Project|Program|Marketing|Sales|Account|Business|Data|Engineering|Design|UX|UI|HR|Finance|Operations|Customer)\s*(?:Engineer|Developer|Manager|Director|Executive|Specialist|Analyst|Designer|Lead|Consultant|Coordinator|Representative|Associate|Officer|VP|President))\b/gi,
+    // "work as a [Title]"
+    /(?:work|working)\s+as\s+(?:a|an)?\s*([A-Za-z\s]+?(?:Engineer|Developer|Manager|Director|Designer|Analyst|Consultant|Specialist|Lead))\b/gi,
+    // "[Title] at [Company]"
+    /((?:CEO|CTO|CFO|COO|VP|SVP|EVP|Director|Manager|Head|Lead|Chief|Founder|Co-Founder|Owner|President)(?:\s+of\s+[A-Za-z]+)?)\s+(?:at|of)\s+/gi,
+  ];
+  
+  for (const pattern of titlePatterns) {
+    const match = message.match(pattern);
+    if (match && match[1]) {
+      info.jobTitle = match[1].trim();
+      break;
+    }
+  }
+
+  // === CALCULATE CONFIDENCE SCORE ===
+  let infoCount = 0;
+  if (info.email) infoCount += 2; // Email is high value
+  if (info.phone) infoCount += 2; // Phone is high value
+  if (info.linkedin) infoCount += 2; // LinkedIn is high value
+  if (info.name) infoCount += 1;
+  if (info.company) infoCount += 1;
+  if (info.jobTitle) infoCount += 1;
+
+  if (infoCount >= 4) {
+    info.confidence = 'high';
+  } else if (infoCount >= 2) {
+    info.confidence = 'medium';
+  }
+
   return info;
 }
 
@@ -615,35 +753,19 @@ ${contextSection}`;
       sources_used: sources.length,
     });
 
-    // Lead capture detection and processing
-    const leadInfo = extractLeadInfo(message);
-    if (leadInfo.email || leadInfo.linkedin || leadInfo.company || leadInfo.name) {
-      console.log("Potential lead info detected:", leadInfo);
-      try {
-        const { error: leadError } = await supabase
-          .from("leads")
-          .insert({
-            chatbot_id,
-            conversation_id: currentConversationId,
-            email: leadInfo.email || null,
-            name: leadInfo.name || null,
-            phone: null,
-            company_name: leadInfo.company || null,
-            linkedin_url: leadInfo.linkedin || null,
-          });
-
-        if (leadError) {
-          console.error("Lead insert error:", leadError);
-        } else {
-          console.log("Lead inserted successfully");
-          // Update conversation to mark as having a lead
-          await supabase
-            .from("conversations")
-            .update({ has_lead: true })
-            .eq("id", currentConversationId);
-            
-          // Trigger enrichment by calling the capture-lead function
-          fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/capture-lead`, {
+    // Enhanced lead capture detection and processing
+    const leadInfo = extractLeadInfo(message, history || []);
+    const hasLeadInfo = leadInfo.email || leadInfo.phone || leadInfo.linkedin || 
+                        (leadInfo.name && leadInfo.company);
+    
+    if (hasLeadInfo) {
+      console.log(`Lead detected (confidence: ${leadInfo.confidence}):`, JSON.stringify(leadInfo));
+      
+      // Non-blocking lead capture - fire and forget with fast response
+      (async () => {
+        try {
+          // Call capture-lead edge function which handles deduplication and enrichment
+          const captureResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/capture-lead`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
@@ -653,15 +775,35 @@ ${contextSection}`;
               chatbot_id,
               conversation_id: currentConversationId,
               email: leadInfo.email,
+              phone: leadInfo.phone,
               name: leadInfo.name,
               company_name: leadInfo.company,
               linkedin_url: leadInfo.linkedin,
+              job_title: leadInfo.jobTitle,
+              custom_data: {
+                extraction_confidence: leadInfo.confidence,
+                source_message: message.substring(0, 500),
+              }
             })
-          }).catch(err => console.error("Enrichment trigger failed:", err));
+          });
+          
+          if (captureResponse.ok) {
+            const result = await captureResponse.json();
+            console.log(`Lead captured successfully: ${result.lead_id} (${result.processing_time_ms}ms)`);
+            
+            // Update conversation to mark as having a lead
+            await supabase
+              .from("conversations")
+              .update({ has_lead: true })
+              .eq("id", currentConversationId);
+          } else {
+            const error = await captureResponse.text();
+            console.error("Lead capture failed:", error);
+          }
+        } catch (err) {
+          console.error("Lead capture processing failed:", err);
         }
-      } catch (err) {
-        console.error("Lead capture processing failed:", err);
-      }
+      })();
     }
 
     // Update conversation with primary intent and message count
