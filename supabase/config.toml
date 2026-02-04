@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.generate-embedding]
 verify_jwt = false
+
+[functions.dodo-checkout]
+verify_jwt = false
+
+[functions.dodo-webhook]
+verify_jwt = false
