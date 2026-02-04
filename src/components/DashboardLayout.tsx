@@ -36,11 +36,11 @@ import {
   Plus,
   ChevronDown,
   LogOut,
-  Sparkles,
   Bot,
   Menu,
   FileText,
 } from "lucide-react";
+import chatveroLogo from "@/assets/chatvero-logo.png";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -87,9 +87,7 @@ function SidebarContents() {
       {/* Logo */}
       <div className="p-4 border-b border-border/50">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/20">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src={chatveroLogo} alt="Chatvero" className="w-10 h-10 object-contain" />
           {!collapsed && (
             <span className="font-display font-bold text-xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               Chatvero
