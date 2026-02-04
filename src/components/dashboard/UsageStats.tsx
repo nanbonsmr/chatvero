@@ -71,25 +71,25 @@ export const UsageStats = () => {
       </div>
 
       {/* Usage Stats */}
-      <div className="p-4 sm:p-6 space-y-5">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
         {/* Chatbots */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MessageSquare className="w-4 h-4 text-primary" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               </div>
-              <span className="text-sm font-medium">Chatbots</span>
+              <span className="text-xs sm:text-sm font-medium truncate">Chatbots</span>
             </div>
-            <span className={`text-sm font-semibold ${getUsageColor(chatbotUsagePercent)}`}>
+            <span className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${getUsageColor(chatbotUsagePercent)}`}>
               {usage.chatbotsUsed} / {formatLimit(limits.chatbots)}
             </span>
           </div>
           {limits.chatbots !== Infinity && (
             <div className="relative">
-              <Progress value={chatbotUsagePercent} className="h-2" />
+              <Progress value={chatbotUsagePercent} className="h-1.5 sm:h-2" />
               <div
-                className={`absolute inset-0 h-2 rounded-full ${getProgressColor(chatbotUsagePercent)}`}
+                className={`absolute inset-0 h-1.5 sm:h-2 rounded-full ${getProgressColor(chatbotUsagePercent)}`}
                 style={{ width: `${chatbotUsagePercent}%` }}
               />
             </div>
@@ -98,22 +98,22 @@ export const UsageStats = () => {
 
         {/* Messages */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-accent" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
               </div>
-              <span className="text-sm font-medium">Messages this month</span>
+              <span className="text-xs sm:text-sm font-medium truncate">Messages this month</span>
             </div>
-            <span className={`text-sm font-semibold ${getUsageColor(messageUsagePercent)}`}>
+            <span className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${getUsageColor(messageUsagePercent)}`}>
               {usage.messagesThisMonth.toLocaleString()} / {formatLimit(limits.messagesPerMonth)}
             </span>
           </div>
           {limits.messagesPerMonth !== Infinity && (
             <div className="relative">
-              <Progress value={messageUsagePercent} className="h-2" />
+              <Progress value={messageUsagePercent} className="h-1.5 sm:h-2" />
               <div
-                className={`absolute inset-0 h-2 rounded-full ${getProgressColor(messageUsagePercent)}`}
+                className={`absolute inset-0 h-1.5 sm:h-2 rounded-full ${getProgressColor(messageUsagePercent)}`}
                 style={{ width: `${messageUsagePercent}%` }}
               />
             </div>
