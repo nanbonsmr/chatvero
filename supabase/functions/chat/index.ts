@@ -392,6 +392,78 @@ Deno.serve(async (req) => {
       );
     }
 
+    // === MESSAGE LIMIT ENFORCEMENT ===
+    const PLAN_LIMITS: Record<string, number> = {
+      free: 100,
+      starter: 1000,
+      growth: 10000,
+      business: Infinity,
+    };
+
+    // Get the chatbot owner's subscription
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("plan, status")
+      .eq("user_id", chatbot.user_id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const userPlan = subscription?.plan || "free";
+    const messageLimit = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
+
+    // Only check limits for non-business plans
+    if (messageLimit !== Infinity) {
+      // Get all chatbots for this user
+      const { data: userChatbots } = await supabase
+        .from("chatbots")
+        .select("id")
+        .eq("user_id", chatbot.user_id);
+
+      if (userChatbots && userChatbots.length > 0) {
+        const chatbotIds = userChatbots.map((c: { id: string }) => c.id);
+
+        // Get all conversations for these chatbots
+        const { data: conversations } = await supabase
+          .from("conversations")
+          .select("id")
+          .in("chatbot_id", chatbotIds);
+
+        if (conversations && conversations.length > 0) {
+          const conversationIds = conversations.map((c: { id: string }) => c.id);
+
+          // Count assistant messages this month
+          const startOfMonth = new Date();
+          startOfMonth.setDate(1);
+          startOfMonth.setHours(0, 0, 0, 0);
+
+          const { count: messageCount } = await supabase
+            .from("messages")
+            .select("*", { count: "exact", head: true })
+            .in("conversation_id", conversationIds)
+            .gte("created_at", startOfMonth.toISOString())
+            .eq("role", "assistant");
+
+          const currentCount = messageCount || 0;
+
+          if (currentCount >= messageLimit) {
+            console.log(`Message limit reached for user ${chatbot.user_id}: ${currentCount}/${messageLimit}`);
+            return new Response(
+              JSON.stringify({
+                error: "Message limit reached",
+                message: `This chatbot has reached its monthly message limit (${messageLimit.toLocaleString()} messages). Please contact the site owner to upgrade their plan.`,
+                limitReached: true,
+              }),
+              { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+
+          console.log(`Message usage: ${currentCount}/${messageLimit} (${userPlan} plan)`);
+        }
+      }
+    }
+
     // Get or create conversation
     let currentConversationId = conversation_id;
     
