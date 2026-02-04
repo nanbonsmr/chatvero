@@ -8,11 +8,11 @@ import { useDodoCheckout } from "@/hooks/useDodoCheckout";
 const plans = [
   {
     name: "Starter",
-    monthlyPrice: 29,
-    yearlyPrice: 290,
+    monthlyPrice: 13,
+    yearlyPrice: 130,
     planKey: "starter" as const,
     features: [
-      "1 Chatbot",
+      "2 Chatbots",
       "1,000 messages/month",
       "Basic analytics",
       "Email support",
@@ -22,8 +22,8 @@ const plans = [
   },
   {
     name: "Growth",
-    monthlyPrice: 79,
-    yearlyPrice: 790,
+    monthlyPrice: 33,
+    yearlyPrice: 330,
     planKey: "growth" as const,
     features: [
       "5 Chatbots",
@@ -39,8 +39,8 @@ const plans = [
   },
   {
     name: "Business",
-    monthlyPrice: 199,
-    yearlyPrice: 1990,
+    monthlyPrice: 63,
+    yearlyPrice: 630,
     planKey: "business" as const,
     features: [
       "Unlimited Chatbots",

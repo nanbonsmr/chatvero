@@ -7,11 +7,11 @@ import { Link } from "react-router-dom";
 const plans = [
   {
     name: "Starter",
-    price: "29",
+    price: "13",
     description: "Perfect for small websites and personal projects",
     features: [
-      "1 Chatbot",
-      "500 messages/month",
+      "2 Chatbots",
+      "1,000 messages/month",
       "Basic customization",
       "Email lead capture",
       "7-day chat history",
@@ -21,12 +21,12 @@ const plans = [
     popular: false,
   },
   {
-    name: "Pro",
-    price: "79",
+    name: "Growth",
+    price: "33",
     description: "Best for growing businesses and teams",
     features: [
       "5 Chatbots",
-      "5,000 messages/month",
+      "10,000 messages/month",
       "Full customization",
       "Lead capture + CRM integration",
       "30-day chat history",
@@ -38,9 +38,9 @@ const plans = [
     popular: true,
   },
   {
-    name: "Enterprise",
-    price: "Custom",
-    description: "For large organizations with custom needs",
+    name: "Business",
+    price: "63",
+    description: "For teams, agencies, and scaling companies",
     features: [
       "Unlimited Chatbots",
       "Unlimited messages",
@@ -51,7 +51,7 @@ const plans = [
       "SLA guarantee",
       "Custom AI training",
     ],
-    cta: "Contact Sales",
+    cta: "Start Free Trial",
     popular: false,
   },
 ];
