@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useLeads } from "@/hooks/useLeads";
+import { useLeads, useDeleteLead } from "@/hooks/useLeads";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   Search,
@@ -26,6 +26,7 @@ import {
   Linkedin,
   Building2,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -35,14 +36,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Lead } from "@/hooks/useLeads";
+import { useToast } from "@/hooks/use-toast";
 
 const ChatbotLeads = () => {
   const { id: chatbotId } = useParams<{ id: string }>();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+  
+  const { toast } = useToast();
   const { data: allLeads = [], isLoading } = useLeads();
+  const deleteLead = useDeleteLead();
   
   // Filter leads for this chatbot
   const leads = useMemo(() => {
@@ -137,7 +152,7 @@ const ChatbotLeads = () => {
                   <TableHead>Phone</TableHead>
                   <TableHead>Status</TableHead>
                    <TableHead>Captured</TableHead>
-                   <TableHead className="w-[100px]">Actions</TableHead>
+                   <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -192,14 +207,24 @@ const ChatbotLeads = () => {
                        {format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setSelectedLead(lead)}
-                        className="hover:bg-primary/10 hover:text-primary"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSelectedLead(lead)}
+                          className="hover:bg-primary/10 hover:text-primary"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setLeadToDelete(lead)}
+                          className="hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -317,6 +342,52 @@ const ChatbotLeads = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={!!leadToDelete} onOpenChange={(open) => !open && setLeadToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Lead</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this lead
+                {leadToDelete?.name ? ` (${leadToDelete.name})` : leadToDelete?.email ? ` (${leadToDelete.email})` : ""}?
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => {
+                  if (leadToDelete) {
+                    deleteLead.mutate(leadToDelete.id, {
+                      onSuccess: () => {
+                        toast({
+                          title: "Lead deleted",
+                          description: "The lead has been successfully deleted.",
+                        });
+                        setLeadToDelete(null);
+                      },
+                      onError: (error) => {
+                        toast({
+                          title: "Error",
+                          description: "Failed to delete the lead. Please try again.",
+                          variant: "destructive",
+                        });
+                        console.error("Delete error:", error);
+                      },
+                    });
+                  }
+                }}
+              >
+                {deleteLead.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Delete"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

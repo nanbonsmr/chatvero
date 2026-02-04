@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -88,5 +88,23 @@ export const useLeads = (filters?: {
       return filteredLeads;
     },
     enabled: !!user,
+  });
+};
+
+export const useDeleteLead = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (leadId: string) => {
+      const { error } = await supabase
+        .from("leads")
+        .delete()
+        .eq("id", leadId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
   });
 };
