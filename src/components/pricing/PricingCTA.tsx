@@ -3,10 +3,14 @@ import { useRef } from "react";
 import { ArrowRight, MessageSquare, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useDodoCheckout } from "@/hooks/useDodoCheckout";
+import { useAuth } from "@/hooks/useAuth";
 
 export const PricingCTA = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { user } = useAuth();
+  const { createCheckoutSession } = useDodoCheckout();
 
   return (
     <section className="py-20 sm:py-32 relative overflow-hidden">
@@ -74,17 +78,30 @@ export const PricingCTA = () => {
             transition={{ delay: 0.5 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link to="/signup">
+            {user ? (
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button 
                   size="xl" 
                   className="gradient-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 group"
+                  onClick={() => createCheckoutSession("growth")}
                 >
                   Get Started Free
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </motion.div>
-            </Link>
+            ) : (
+              <Link to="/signup">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button 
+                    size="xl" 
+                    className="gradient-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 group"
+                  >
+                    Get Started Free
+                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </motion.div>
+              </Link>
+            )}
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button size="xl" variant="outline" className="border-2">
                 Talk to Sales
