@@ -40,6 +40,7 @@ import {
   Menu,
   FileText,
   CreditCard,
+  Gauge,
 } from "lucide-react";
 import chatveroLogo from "@/assets/chatvero-logo.png";
 
@@ -222,6 +223,18 @@ function SidebarContents() {
                   <Link to="/dashboard/pricing">
                     <CreditCard className="w-4 h-4" />
                     {!collapsed && <span>Pricing</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname === "/dashboard/usage"}
+                  tooltip={collapsed ? "Usage" : undefined}
+                >
+                  <Link to="/dashboard/usage">
+                    <Gauge className="w-4 h-4" />
+                    {!collapsed && <span>Usage</span>}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
