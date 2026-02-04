@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import * as jose from "https://deno.land/x/jose@v5.3.0/index.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,35 +17,42 @@ if (import.meta.main) {
       if (!authHeader?.startsWith("Bearer ")) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
-          headers: corsHeaders,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const token = authHeader.replace("Bearer ", "");
-      const jwtSecret = Deno.env.get("SUPABASE_JWT_SECRET")!;
-      const secret = new TextEncoder().encode(jwtSecret);
+      // Create client with the user's auth header to validate the token
+      const supabaseAuth = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        {
+          global: {
+            headers: { Authorization: authHeader },
+          },
+        }
+      );
 
-      let claims: any;
-      try {
-        const verified = await jose.jwtVerify(token, secret);
-        claims = verified.payload;
-      } catch {
+      // Use getUser() to validate the token - works with ES256 signing keys
+      const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+      
+      if (authError || !user) {
+        console.error("Auth error:", authError);
         return new Response(JSON.stringify({ error: "Invalid token" }), {
           status: 401,
-          headers: corsHeaders,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const userId = claims.sub;
       const { plan } = await req.json();
 
       if (!plan || !["starter", "growth", "business"].includes(plan)) {
         return new Response(JSON.stringify({ error: "Invalid plan" }), {
           status: 400,
-          headers: corsHeaders,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
+      // Use service role client for database operations
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -64,6 +70,9 @@ if (import.meta.main) {
         throw new Error("DODO_API_KEY not configured");
       }
 
+      // Determine the redirect base URL
+      const origin = req.headers.get("origin") || "https://embedbot.lovable.app";
+
       // Create checkout session with Dodo
       const checkoutResponse = await fetch(
         "https://api.dodopayments.com/v1/checkout",
@@ -75,20 +84,21 @@ if (import.meta.main) {
           },
           body: JSON.stringify({
             product_id: planMap[plan],
-            customer_email: claims.email,
+            customer_email: user.email,
             metadata: {
-              user_id: userId,
+              user_id: user.id,
               plan: plan,
             },
-            success_url: `${new URL(req.url).origin}/dashboard?payment=success`,
-            cancel_url: `${new URL(req.url).origin}/pricing?payment=cancelled`,
+            success_url: `${origin}/dashboard?payment=success`,
+            cancel_url: `${origin}/pricing?payment=cancelled`,
           }),
         }
       );
 
       if (!checkoutResponse.ok) {
-        const error = await checkoutResponse.text();
-        throw new Error(`Dodo API error: ${error}`);
+        const errorText = await checkoutResponse.text();
+        console.error("Dodo API error:", errorText);
+        throw new Error(`Dodo API error: ${errorText}`);
       }
 
       const checkoutData = await checkoutResponse.json();
@@ -97,13 +107,14 @@ if (import.meta.main) {
       const { error: insertError } = await supabase
         .from("subscriptions")
         .insert({
-          user_id: userId,
+          user_id: user.id,
           plan: plan,
           status: "pending",
           dodo_transaction_id: checkoutData.transaction_id,
         });
 
       if (insertError) {
+        console.error("Insert error:", insertError);
         throw insertError;
       }
 
@@ -114,7 +125,7 @@ if (import.meta.main) {
         }),
         {
           status: 200,
-          headers: corsHeaders,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     } catch (error: unknown) {
@@ -122,7 +133,7 @@ if (import.meta.main) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       return new Response(JSON.stringify({ error: errorMessage }), {
         status: 500,
-        headers: corsHeaders,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
   });
