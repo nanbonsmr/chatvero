@@ -100,15 +100,15 @@ const ChatbotAnalytics = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8 space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="font-display text-2xl font-bold">Analytics</h1>
-            <p className="text-muted-foreground">Track chatbot performance and topic insights</p>
+            <h1 className="font-display text-xl sm:text-2xl font-bold">Analytics</h1>
+            <p className="text-muted-foreground text-sm">Track performance and insights</p>
           </div>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -127,24 +127,24 @@ const ChatbotAnalytics = () => {
         ) : (
           <>
             {/* Main Stats */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6"
+                  className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-border/50 bg-card p-3 sm:p-6"
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`} />
                   <div className="relative">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-4`}>
-                      <stat.icon className="w-6 h-6 text-white" />
+                    <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-2 sm:mb-4`}>
+                      <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <p className="text-3xl font-display font-bold mb-1">
+                    <p className="text-xl sm:text-3xl font-display font-bold mb-0.5 sm:mb-1">
                       {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
                     </p>
-                    <p className="text-muted-foreground text-sm">{stat.label}</p>
+                    <p className="text-muted-foreground text-xs sm:text-sm">{stat.label}</p>
                   </div>
                 </motion.div>
               ))}
@@ -155,24 +155,24 @@ const ChatbotAnalytics = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="grid sm:grid-cols-2 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6"
             >
               {contextStats.map((stat, index) => (
                 <div
                   key={stat.label}
-                  className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6"
+                  className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6"
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`} />
-                  <div className="relative flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center`}>
-                      <stat.icon className="w-7 h-7 text-white" />
+                  <div className="relative flex items-center gap-3 sm:gap-4">
+                    <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center flex-shrink-0`}>
+                      <stat.icon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                     </div>
                     <div>
-                      <p className="text-3xl font-display font-bold">
+                      <p className="text-2xl sm:text-3xl font-display font-bold">
                         {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
                       </p>
-                      <p className="text-muted-foreground text-sm">{stat.label}</p>
-                      <p className="text-xs text-muted-foreground/70">{stat.description}</p>
+                      <p className="text-muted-foreground text-xs sm:text-sm">{stat.label}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground/70">{stat.description}</p>
                     </div>
                   </div>
                 </div>
@@ -180,21 +180,21 @@ const ChatbotAnalytics = () => {
             </motion.div>
 
             {/* Charts Row */}
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Conversations Chart */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="rounded-2xl border border-border/50 bg-card p-6"
+                className="rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6"
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                    <MessageCircle className="w-5 h-5 text-white" />
+                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
-                  <h2 className="font-display text-lg font-semibold">Conversations</h2>
+                  <h2 className="font-display text-base sm:text-lg font-semibold">Conversations</h2>
                 </div>
-                <div className="h-[280px]">
+                <div className="h-[200px] sm:h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
@@ -230,15 +230,15 @@ const ChatbotAnalytics = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="rounded-2xl border border-border/50 bg-card p-6"
+                className="rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6"
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-white" />
+                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
-                  <h2 className="font-display text-lg font-semibold">Leads Captured</h2>
+                  <h2 className="font-display text-base sm:text-lg font-semibold">Leads Captured</h2>
                 </div>
-                <div className="h-[280px]">
+                <div className="h-[200px] sm:h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
@@ -264,25 +264,25 @@ const ChatbotAnalytics = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-display text-lg font-semibold">Topic Analysis</h2>
-                  <p className="text-sm text-muted-foreground">What users are asking about</p>
+                  <h2 className="font-display text-base sm:text-lg font-semibold">Topic Analysis</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">What users are asking about</p>
                 </div>
               </div>
 
-              <div className="grid lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Topic Distribution Pie Chart */}
-                <div className="rounded-2xl border border-border/50 bg-card p-6">
-                  <h3 className="font-medium mb-4 flex items-center gap-2">
+                <div className="rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6">
+                  <h3 className="font-medium mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
                     <HelpCircle className="w-4 h-4 text-muted-foreground" />
                     Topic Distribution
                   </h3>
                   {topicChartData.length > 0 ? (
-                    <div className="h-[280px]">
+                    <div className="h-[240px] sm:h-[280px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -328,8 +328,8 @@ const ChatbotAnalytics = () => {
                 </div>
 
                 {/* Topic Performance List */}
-                <div className="rounded-2xl border border-border/50 bg-card p-6">
-                  <h3 className="font-medium mb-4 flex items-center gap-2">
+                <div className="rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6">
+                  <h3 className="font-medium mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
                     <Target className="w-4 h-4 text-muted-foreground" />
                     Topic Performance
                   </h3>
@@ -381,36 +381,36 @@ const ChatbotAnalytics = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="rounded-2xl border border-border/50 bg-card p-6"
+              className="rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-                  <Database className="w-5 h-5 text-white" />
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                  <Database className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-display text-lg font-semibold">Knowledge Base Performance</h2>
-                  <p className="text-sm text-muted-foreground">How well the AI uses your content</p>
+                  <h2 className="font-display text-base sm:text-lg font-semibold">Knowledge Base Performance</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">How well the AI uses your content</p>
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-3 gap-6">
-                <div className="text-center p-4 rounded-xl bg-muted/30">
-                  <div className="text-3xl font-display font-bold text-emerald-500">
+              <div className="grid grid-cols-3 gap-2 sm:gap-6">
+                <div className="text-center p-2 sm:p-4 rounded-lg sm:rounded-xl bg-muted/30">
+                  <div className="text-xl sm:text-3xl font-display font-bold text-emerald-500">
                     {topicAnalytics?.totals.totalWithContext || 0}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">Responses with Context</p>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">With Context</p>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-muted/30">
-                  <div className="text-3xl font-display font-bold text-amber-500">
+                <div className="text-center p-2 sm:p-4 rounded-lg sm:rounded-xl bg-muted/30">
+                  <div className="text-xl sm:text-3xl font-display font-bold text-amber-500">
                     {topicAnalytics?.totals.totalWithoutContext || 0}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">Responses without Context</p>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">No Context</p>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-muted/30">
-                  <div className="text-3xl font-display font-bold text-blue-500">
+                <div className="text-center p-2 sm:p-4 rounded-lg sm:rounded-xl bg-muted/30">
+                  <div className="text-xl sm:text-3xl font-display font-bold text-blue-500">
                     {topicAnalytics?.totals.overallContextHitRate || 0}%
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">Overall Hit Rate</p>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">Hit Rate</p>
                 </div>
               </div>
 

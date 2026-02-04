@@ -112,12 +112,12 @@ const ChatbotOverview = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8 space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col gap-4">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="font-display text-3xl font-bold">{chatbot.name}</h1>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold">{chatbot.name}</h1>
               <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                 chatbot.is_active 
                   ? "bg-green-500/10 text-green-500" 
@@ -136,39 +136,43 @@ const ChatbotOverview = () => {
               <ArrowUpRight className="w-3 h-3" />
             </a>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleCrawl} disabled={isCrawling}>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleCrawl} disabled={isCrawling}>
               {isCrawling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-              Crawl Website
+              <span className="hidden sm:inline">Crawl Website</span>
+              <span className="sm:hidden">Crawl</span>
             </Button>
-            <Button onClick={copyEmbedCode}>
+            <Button size="sm" className="flex-1 sm:flex-none" onClick={copyEmbedCode}>
               <Copy className="w-4 h-4" />
-              Copy Embed Code
+              <span className="hidden sm:inline">Copy Embed Code</span>
+              <span className="sm:hidden">Embed</span>
             </Button>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6"
+              className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`} />
-              <div className="relative">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-4`}>
-                  <stat.icon className="w-6 h-6 text-white" />
+              <div className="relative flex sm:block items-center gap-4">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center sm:mb-4 flex-shrink-0`}>
+                  <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <p className="text-4xl font-display font-bold mb-1">
-                  {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-                </p>
-                <div className="flex items-center justify-between">
-                  <p className="text-muted-foreground">{stat.label}</p>
-                  <span className="text-xs text-green-500 font-medium">{stat.change}</span>
+                <div className="flex-1 sm:flex-none">
+                  <p className="text-2xl sm:text-4xl font-display font-bold mb-0 sm:mb-1">
+                    {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
+                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-muted-foreground text-sm">{stat.label}</p>
+                    <span className="text-xs text-green-500 font-medium">{stat.change}</span>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -176,19 +180,19 @@ const ChatbotOverview = () => {
         </div>
 
         {/* Charts and Activity */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Chart */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-2 rounded-2xl border border-border/50 bg-card p-6"
+            className="lg:col-span-2 rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-display text-lg font-semibold">Activity</h2>
-              <span className="text-sm text-muted-foreground">Last 7 days</span>
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="font-display text-base sm:text-lg font-semibold">Activity</h2>
+              <span className="text-xs sm:text-sm text-muted-foreground">Last 7 days</span>
             </div>
-            <div className="h-[280px]">
+            <div className="h-[220px] sm:h-[280px]">
               {analyticsLoading ? (
                 <div className="h-full flex items-center justify-center">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -301,44 +305,44 @@ const ChatbotOverview = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="rounded-2xl border border-border/50 bg-gradient-to-br from-primary/5 to-primary/0 p-6"
+          className="rounded-xl sm:rounded-2xl border border-border/50 bg-gradient-to-br from-primary/5 to-primary/0 p-4 sm:p-6"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-primary" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <h2 className="font-display text-lg font-semibold">Quick Actions</h2>
+            <h2 className="font-display text-base sm:text-lg font-semibold">Quick Actions</h2>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
             <Link to={`/chatbot/${id}/settings`}>
-              <Button variant="outline" className="w-full justify-start h-auto py-4">
+              <Button variant="outline" className="w-full justify-start h-auto py-3 sm:py-4 px-3 sm:px-4">
                 <div className="text-left">
-                  <p className="font-medium">Edit Settings</p>
-                  <p className="text-xs text-muted-foreground">Customize appearance & behavior</p>
+                  <p className="font-medium text-sm sm:text-base">Settings</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Customize appearance</p>
                 </div>
               </Button>
             </Link>
             <Link to={`/chatbot/${id}/knowledge`}>
-              <Button variant="outline" className="w-full justify-start h-auto py-4">
+              <Button variant="outline" className="w-full justify-start h-auto py-3 sm:py-4 px-3 sm:px-4">
                 <div className="text-left">
-                  <p className="font-medium">Knowledge Base</p>
-                  <p className="text-xs text-muted-foreground">Manage crawled pages</p>
+                  <p className="font-medium text-sm sm:text-base">Knowledge</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Manage pages</p>
                 </div>
               </Button>
             </Link>
             <Link to={`/chatbot/${id}/leads`}>
-              <Button variant="outline" className="w-full justify-start h-auto py-4">
+              <Button variant="outline" className="w-full justify-start h-auto py-3 sm:py-4 px-3 sm:px-4">
                 <div className="text-left">
-                  <p className="font-medium">View Leads</p>
-                  <p className="text-xs text-muted-foreground">See captured contacts</p>
+                  <p className="font-medium text-sm sm:text-base">Leads</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">See contacts</p>
                 </div>
               </Button>
             </Link>
             <Link to={`/chatbot/${id}/analytics`}>
-              <Button variant="outline" className="w-full justify-start h-auto py-4">
+              <Button variant="outline" className="w-full justify-start h-auto py-3 sm:py-4 px-3 sm:px-4">
                 <div className="text-left">
-                  <p className="font-medium">Analytics</p>
-                  <p className="text-xs text-muted-foreground">Track performance</p>
+                  <p className="font-medium text-sm sm:text-base">Analytics</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Track performance</p>
                 </div>
               </Button>
             </Link>
