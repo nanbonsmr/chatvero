@@ -47,6 +47,8 @@ import {
   Trash2,
   CheckSquare,
   Square,
+   Share2,
+   Smartphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +69,15 @@ const TIME_FILTERS = [
   { value: "90days", label: "Last 90 Days" },
 ];
 
+ const PLATFORM_FILTERS = [
+   { value: "all", label: "All Channels", icon: Share2 },
+   { value: "widget", label: "Website Widget", icon: Globe },
+   { value: "facebook", label: "Facebook", icon: Smartphone },
+   { value: "instagram", label: "Instagram", icon: Smartphone },
+   { value: "whatsapp", label: "WhatsApp", icon: Smartphone },
+   { value: "telegram", label: "Telegram", icon: Smartphone },
+ ];
+ 
 const ChatbotConversations = () => {
   const { id: chatbotId } = useParams<{ id: string }>();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -76,6 +87,7 @@ const ChatbotConversations = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [showArchived, setShowArchived] = useState(false);
+   const [platformFilter, setPlatformFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
@@ -107,6 +119,16 @@ const ChatbotConversations = () => {
         return false;
       }
 
+       // Platform filter
+       if (platformFilter !== "all") {
+         const convPlatform = conv.platform || "widget";
+         if (platformFilter === "social") {
+           if (convPlatform === "widget") return false;
+         } else if (convPlatform !== platformFilter) {
+           return false;
+         }
+       }
+ 
       if (timeFilter !== "all") {
         const convDate = new Date(conv.started_at);
         const now = new Date();
@@ -142,7 +164,7 @@ const ChatbotConversations = () => {
     });
 
     return filtered;
-  }, [conversations, searchQuery, categoryFilter, timeFilter, sortOrder, showArchived]);
+   }, [conversations, searchQuery, categoryFilter, timeFilter, sortOrder, showArchived, platformFilter]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
   const recentMessages = messages.slice(-50);
@@ -253,6 +275,19 @@ const ChatbotConversations = () => {
                 ))}
               </SelectContent>
             </Select>
+             <Select value={platformFilter} onValueChange={setPlatformFilter}>
+               <SelectTrigger className="w-full sm:w-[160px]">
+                 <Share2 className="w-4 h-4 mr-2" />
+                 <SelectValue />
+               </SelectTrigger>
+               <SelectContent>
+                 {PLATFORM_FILTERS.map((pf) => (
+                   <SelectItem key={pf.value} value={pf.value}>
+                     {pf.label}
+                   </SelectItem>
+                 ))}
+               </SelectContent>
+             </Select>
             <Button
               variant="outline"
               size="sm"
@@ -404,6 +439,24 @@ const ChatbotConversations = () => {
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                             {conv.category}
                           </Badge>
+                           {conv.platform && conv.platform !== "widget" && (
+                             <Badge 
+                               variant="outline" 
+                               className="text-[10px] px-1.5 py-0"
+                               style={{
+                                 borderColor: conv.platform === "facebook" ? "#1877f2" :
+                                             conv.platform === "instagram" ? "#e4405f" :
+                                             conv.platform === "whatsapp" ? "#25d366" :
+                                             conv.platform === "telegram" ? "#0088cc" : undefined,
+                                 color: conv.platform === "facebook" ? "#1877f2" :
+                                       conv.platform === "instagram" ? "#e4405f" :
+                                       conv.platform === "whatsapp" ? "#25d366" :
+                                       conv.platform === "telegram" ? "#0088cc" : undefined,
+                               }}
+                             >
+                               {conv.platform}
+                             </Badge>
+                           )}
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                           <span className="flex items-center gap-1">
