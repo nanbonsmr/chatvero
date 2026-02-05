@@ -273,6 +273,7 @@ export type Database = {
           id: string
           message_count: number | null
           page_url: string | null
+          platform: string | null
           primary_intent: string | null
           started_at: string
           user_agent: string | null
@@ -287,6 +288,7 @@ export type Database = {
           id?: string
           message_count?: number | null
           page_url?: string | null
+          platform?: string | null
           primary_intent?: string | null
           started_at?: string
           user_agent?: string | null
@@ -301,6 +303,7 @@ export type Database = {
           id?: string
           message_count?: number | null
           page_url?: string | null
+          platform?: string | null
           primary_intent?: string | null
           started_at?: string
           user_agent?: string | null

@@ -116,6 +116,7 @@
              visitor_id: visitorId,
              page_url: `${platform}://direct`,
              category: "social_media",
+             platform: platform,
            })
            .select("id")
            .single();
