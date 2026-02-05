@@ -1,7 +1,9 @@
  import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
  import { supabase } from "@/integrations/supabase/client";
  
- export type Platform = "facebook" | "whatsapp" | "instagram" | "telegram";
+export type Platform = "facebook" | "whatsapp" | "instagram" | "telegram";
+
+const SUPABASE_URL = "https://czhltxnpaukjqmtgrgzc.supabase.co";
  
  export interface ChatbotChannel {
    id: string;
@@ -77,7 +79,30 @@
            .single();
  
          if (error) throw error;
-         return data as ChatbotChannel;
+      const channel = data as ChatbotChannel;
+      
+      // Auto-register webhook for Telegram
+      if (platform === "telegram" && credentials.bot_token) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/register-telegram-webhook`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              channel_id: channel.id,
+              bot_token: credentials.bot_token,
+              webhook_token: channel.webhook_token,
+            }),
+          });
+          const result = await response.json();
+          if (!result.success) {
+            console.error("Telegram webhook registration failed:", result);
+          }
+        } catch (err) {
+          console.error("Failed to register Telegram webhook:", err);
+        }
+      }
+      
+      return channel;
        } else {
          // Create new channel
          const { data, error } = await supabase
@@ -95,7 +120,30 @@
            .single();
  
          if (error) throw error;
-         return data as ChatbotChannel;
+      const channel = data as ChatbotChannel;
+      
+      // Auto-register webhook for Telegram
+      if (platform === "telegram" && credentials.bot_token) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/register-telegram-webhook`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              channel_id: channel.id,
+              bot_token: credentials.bot_token,
+              webhook_token: channel.webhook_token,
+            }),
+          });
+          const result = await response.json();
+          if (!result.success) {
+            console.error("Telegram webhook registration failed:", result);
+          }
+        } catch (err) {
+          console.error("Failed to register Telegram webhook:", err);
+        }
+      }
+      
+      return channel;
        }
      },
      onSuccess: (_, variables) => {
