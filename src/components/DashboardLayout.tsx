@@ -41,6 +41,7 @@ import {
   FileText,
   CreditCard,
   Gauge,
+  Share2,
 } from "lucide-react";
 import chatveroLogo from "@/assets/chatvero-logo.png";
 
@@ -53,6 +54,7 @@ const navItems = [
   { title: "Conversations", path: "/conversations", icon: MessageCircle },
   { title: "Leads", path: "/leads", icon: Users },
   { title: "Analytics", path: "/analytics", icon: BarChart3 },
+  { title: "Channels", path: "/channels", icon: Share2 },
   { title: "Knowledge Base", path: "/knowledge", icon: Database },
   { title: "Documents", path: "/documents", icon: FileText },
   { title: "Settings", path: "/settings", icon: Settings },
