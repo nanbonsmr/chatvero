@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      chatbot_channels: {
+        Row: {
+          chatbot_id: string
+          connected_at: string | null
+          created_at: string
+          credentials: Json | null
+          id: string
+          is_active: boolean
+          page_id: string | null
+          page_name: string | null
+          platform: string
+          updated_at: string
+          webhook_token: string | null
+        }
+        Insert: {
+          chatbot_id: string
+          connected_at?: string | null
+          created_at?: string
+          credentials?: Json | null
+          id?: string
+          is_active?: boolean
+          page_id?: string | null
+          page_name?: string | null
+          platform: string
+          updated_at?: string
+          webhook_token?: string | null
+        }
+        Update: {
+          chatbot_id?: string
+          connected_at?: string | null
+          created_at?: string
+          credentials?: Json | null
+          id?: string
+          is_active?: boolean
+          page_id?: string | null
+          page_name?: string | null
+          platform?: string
+          updated_at?: string
+          webhook_token?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_channels_chatbot_id_fkey"
+            columns: ["chatbot_id"]
+            isOneToOne: false
+            referencedRelation: "chatbots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chatbot_chunks: {
         Row: {
           chatbot_id: string
