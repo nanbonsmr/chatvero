@@ -6,6 +6,46 @@
      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
  };
  
+ // Extract lead info from social message
+ function extractLeadInfo(text: string, senderId: string, platform: string): {
+   email?: string;
+   phone?: string;
+   name?: string;
+ } {
+   const info: { email?: string; phone?: string; name?: string } = {};
+   
+   // Email extraction
+   const emailMatch = text.match(/\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/i);
+   if (emailMatch) info.email = emailMatch[1].toLowerCase();
+   
+   // Phone extraction (international formats)
+   const phonePatterns = [
+     /\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b/,
+     /\b\+[0-9]{1,4}[-.\s]?[0-9]{1,4}[-.\s]?[0-9]{2,4}[-.\s]?[0-9]{2,4}\b/,
+   ];
+   for (const pattern of phonePatterns) {
+     const match = text.match(pattern);
+     if (match) {
+       info.phone = match[0].replace(/[^\d+]/g, '');
+       break;
+     }
+   }
+   
+   // Name extraction
+   const namePatterns = [
+     /\b(?:my name is|i am|i'm|this is|call me)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/gi,
+   ];
+   for (const pattern of namePatterns) {
+     const match = text.match(pattern);
+     if (match && match[1]) {
+       info.name = match[1].trim();
+       break;
+     }
+   }
+   
+   return info;
+ }
+ 
  Deno.serve(async (req) => {
    // Handle CORS preflight
    if (req.method === "OPTIONS") {
@@ -182,6 +222,56 @@
  
        // Send reply based on platform
       await sendPlatformReply(platform!, channel, messageData.senderId, aiMessage);
+ 
+       // Extract and capture lead info from the message
+       const leadInfo = extractLeadInfo(messageData.text, messageData.senderId, platform!);
+       const hasLeadInfo = leadInfo.email || leadInfo.phone || leadInfo.name;
+       
+       if (hasLeadInfo) {
+         console.log("Lead detected from social:", JSON.stringify(leadInfo));
+         
+         // Check if lead already exists for this chatbot (by email or by visitor_id)
+         let existingLead = null;
+         
+         if (leadInfo.email) {
+           const { data } = await supabase
+             .from("leads")
+             .select("id")
+             .eq("chatbot_id", channel.chatbot_id)
+             .eq("email", leadInfo.email)
+             .maybeSingle();
+           existingLead = data;
+         }
+         
+         if (!existingLead) {
+           // Create new lead
+           const { error: leadError } = await supabase.from("leads").insert({
+             chatbot_id: channel.chatbot_id,
+             conversation_id: conversation.id,
+             email: leadInfo.email,
+             phone: leadInfo.phone,
+             name: leadInfo.name,
+             custom_data: {
+               source: platform,
+               sender_id: messageData.senderId,
+             },
+           });
+           
+           if (leadError) {
+             console.error("Failed to capture lead:", leadError);
+           } else {
+             console.log("Lead captured successfully from", platform);
+             
+             // Mark conversation as having a lead
+             await supabase
+               .from("conversations")
+               .update({ has_lead: true })
+               .eq("id", conversation.id);
+           }
+         } else {
+           console.log("Lead already exists, skipping duplicate");
+         }
+       }
  
        // Update conversation message count
        await supabase.rpc("update_conversation_analytics", {
