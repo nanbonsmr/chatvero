@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Check, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -97,41 +96,36 @@ export const DashboardPricing = ({ currentPlan }: DashboardPricingProps) => {
       </div>
 
       {/* Pricing cards */}
-      <div className="grid md:grid-cols-3 gap-4 lg:gap-6">
-        {plans.map((plan, index) => {
+      <div className="grid md:grid-cols-3 gap-4">
+        {plans.map((plan) => {
           const isCurrentPlan = currentPlan === plan.planKey;
           const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
           const isLoadingThis = loading && loadingPlan === plan.planKey;
 
           return (
-            <motion.div
+            <div
               key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
               className={`relative rounded-xl border bg-card overflow-hidden ${
-                plan.popular ? "border-primary shadow-lg shadow-primary/10" : "border-border/50"
+                plan.popular ? "border-primary" : "border-border"
               }`}
             >
               {/* Popular badge */}
               {plan.popular && (
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-accent py-1 text-center">
-                  <span className="text-xs font-medium text-primary-foreground flex items-center justify-center gap-1">
+                <div className="absolute top-0 left-0 right-0 bg-primary py-1 text-center">
+                  <span className="text-xs font-medium text-primary-foreground inline-flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
                     Most Popular
                   </span>
                 </div>
               )}
 
-              <div className={`p-4 lg:p-6 ${plan.popular ? "pt-10" : ""}`}>
+              <div className={`p-5 ${plan.popular ? "pt-10" : ""}`}>
                 {/* Plan header */}
                 <div className="mb-4">
-                  <h3 className="font-display font-semibold text-lg">{plan.name}</h3>
+                  <h3 className="font-semibold text-lg">{plan.name}</h3>
                   <div className="mt-2">
-                    <span className="text-3xl lg:text-4xl font-bold">${price}</span>
-                    <span className="text-muted-foreground text-sm">
-                      /{isYearly ? "year" : "month"}
-                    </span>
+                    <span className="text-3xl font-bold">${price}</span>
+                    <span className="text-muted-foreground text-sm">/{isYearly ? "yr" : "mo"}</span>
                   </div>
                 </div>
 
@@ -139,8 +133,7 @@ export const DashboardPricing = ({ currentPlan }: DashboardPricingProps) => {
                 <ul className="space-y-2 mb-6">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-sm">
-                      <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 bg-gradient-to-br ${plan.gradient} bg-clip-text text-transparent`} 
-                        style={{ color: plan.popular ? 'hsl(var(--primary))' : undefined }} />
+                      <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
                       <span className="text-muted-foreground">{feature}</span>
                     </li>
                   ))}
@@ -148,12 +141,8 @@ export const DashboardPricing = ({ currentPlan }: DashboardPricingProps) => {
 
                 {/* Action button */}
                 <Button
-                  className={`w-full ${
-                    plan.popular
-                      ? "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                      : ""
-                  }`}
-                  variant={plan.popular ? "default" : "outline"}
+                  className="w-full"
+                  variant={isCurrentPlan ? "secondary" : plan.popular ? "default" : "outline"}
                   disabled={isCurrentPlan || loading}
                   onClick={() => handleSelectPlan(plan)}
                 >
@@ -162,11 +151,11 @@ export const DashboardPricing = ({ currentPlan }: DashboardPricingProps) => {
                   ) : isCurrentPlan ? (
                     "Current Plan"
                   ) : (
-                    "Select Plan"
+                    "Choose Plan"
                   )}
                 </Button>
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>

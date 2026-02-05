@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { MessageSquare, Zap, ArrowUpRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -10,15 +9,11 @@ export const UsageStats = () => {
 
   if (isLoading) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6"
-      >
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="rounded-xl border border-border bg-card p-5">
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -33,37 +28,31 @@ export const UsageStats = () => {
   };
 
   const getUsageColor = (percent: number) => {
-    if (percent >= 90) return "text-red-500";
-    if (percent >= 75) return "text-amber-500";
-    return "text-green-500";
+    if (percent >= 90) return "text-destructive";
+    if (percent >= 75) return "text-amber-600 dark:text-amber-400";
+    return "text-green-600 dark:text-green-400";
   };
 
   const getProgressColor = (percent: number) => {
-    if (percent >= 90) return "bg-red-500";
+    if (percent >= 90) return "bg-destructive";
     if (percent >= 75) return "bg-amber-500";
     return "bg-primary";
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl sm:rounded-2xl border border-border/50 bg-card overflow-hidden"
-    >
+    <div className="rounded-xl border border-border bg-card">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-border/50">
+      <div className="p-5 border-b border-border">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-display font-semibold text-base sm:text-lg">Usage & Limits</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              {planInfo.name} Plan
-            </p>
+            <h3 className="font-semibold">Usage & Limits</h3>
+            <p className="text-sm text-muted-foreground">{planInfo.name} Plan</p>
           </div>
           {plan !== "business" && (
             <Link to="/dashboard/pricing">
-              <Button variant="outline" size="sm" className="text-xs">
-                <ArrowUpRight className="w-3 h-3 mr-1" />
+              <Button variant="outline" size="sm">
                 Upgrade
+                <ArrowUpRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
           )}
@@ -71,26 +60,25 @@ export const UsageStats = () => {
       </div>
 
       {/* Usage Stats */}
-      <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+      <div className="p-5 space-y-5">
         {/* Chatbots */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <MessageSquare className="w-4 h-4 text-primary" />
               </div>
-              <span className="text-xs sm:text-sm font-medium truncate">Chatbots</span>
+              <span className="text-sm font-medium">Chatbots</span>
             </div>
-            <span className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${getUsageColor(chatbotUsagePercent)}`}>
+            <span className={`text-sm font-medium ${getUsageColor(chatbotUsagePercent)}`}>
               {usage.chatbotsUsed} / {formatLimit(limits.chatbots)}
             </span>
           </div>
           {limits.chatbots !== Infinity && (
-            <div className="relative">
-              <Progress value={chatbotUsagePercent} className="h-1.5 sm:h-2" />
+            <div className="relative h-2 bg-secondary rounded-full overflow-hidden">
               <div
-                className={`absolute inset-0 h-1.5 sm:h-2 rounded-full ${getProgressColor(chatbotUsagePercent)}`}
-                style={{ width: `${chatbotUsagePercent}%` }}
+                className={`absolute inset-y-0 left-0 rounded-full transition-all ${getProgressColor(chatbotUsagePercent)}`}
+                style={{ width: `${Math.min(chatbotUsagePercent, 100)}%` }}
               />
             </div>
           )}
@@ -98,23 +86,22 @@ export const UsageStats = () => {
 
         {/* Messages */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+                <Zap className="w-4 h-4 text-foreground/70" />
               </div>
-              <span className="text-xs sm:text-sm font-medium truncate">Messages this month</span>
+              <span className="text-sm font-medium">Messages this month</span>
             </div>
-            <span className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${getUsageColor(messageUsagePercent)}`}>
+            <span className={`text-sm font-medium ${getUsageColor(messageUsagePercent)}`}>
               {usage.messagesThisMonth.toLocaleString()} / {formatLimit(limits.messagesPerMonth)}
             </span>
           </div>
           {limits.messagesPerMonth !== Infinity && (
-            <div className="relative">
-              <Progress value={messageUsagePercent} className="h-1.5 sm:h-2" />
+            <div className="relative h-2 bg-secondary rounded-full overflow-hidden">
               <div
-                className={`absolute inset-0 h-1.5 sm:h-2 rounded-full ${getProgressColor(messageUsagePercent)}`}
-                style={{ width: `${messageUsagePercent}%` }}
+                className={`absolute inset-y-0 left-0 rounded-full transition-all ${getProgressColor(messageUsagePercent)}`}
+                style={{ width: `${Math.min(messageUsagePercent, 100)}%` }}
               />
             </div>
           )}
@@ -122,13 +109,13 @@ export const UsageStats = () => {
 
         {/* Warning if near limit */}
         {(chatbotUsagePercent >= 90 || messageUsagePercent >= 90) && plan !== "business" && (
-          <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-            <p className="text-xs text-destructive">
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+            <p className="text-sm text-destructive">
               You're approaching your plan limits. Consider upgrading for more capacity.
             </p>
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };

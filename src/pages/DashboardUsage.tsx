@@ -1,7 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { UsageStats } from "@/components/dashboard/UsageStats";
 import { usePlanLimits, PLAN_LIMITS } from "@/hooks/usePlanLimits";
-import { motion } from "framer-motion";
 import { Check, X, Loader2 } from "lucide-react";
 
 const DashboardUsagePage = () => {
@@ -32,23 +31,16 @@ const DashboardUsagePage = () => {
         <UsageStats />
 
         {/* Plan Features */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-xl sm:rounded-2xl border border-border/50 bg-card overflow-hidden"
-        >
-          <div className="p-4 sm:p-6 border-b border-border/50">
-            <h3 className="font-display font-semibold text-base sm:text-lg">Plan Features</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Features available on your current plan
-            </p>
+        <div className="rounded-xl border border-border bg-card">
+          <div className="p-5 border-b border-border">
+            <h3 className="font-semibold">Plan Features</h3>
+            <p className="text-sm text-muted-foreground">Features available on your plan</p>
           </div>
 
-          <div className="p-4 sm:p-6">
+          <div className="p-5">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
               </div>
             ) : planData ? (
               <div className="grid sm:grid-cols-2 gap-3">
@@ -57,20 +49,20 @@ const DashboardUsagePage = () => {
                   return (
                     <div
                       key={feature.key}
-                      className={`flex items-center gap-3 p-3 rounded-lg ${
-                        isAvailable ? "bg-primary/5" : "bg-muted/50"
+                      className={`flex items-center gap-3 p-3 rounded-lg border ${
+                        isAvailable ? "bg-primary/5 border-primary/20" : "bg-secondary/50 border-transparent"
                       }`}
                     >
                       {isAvailable ? (
-                        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
                           <Check className="w-4 h-4 text-primary" />
                         </div>
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center">
                           <X className="w-4 h-4 text-muted-foreground" />
                         </div>
                       )}
-                      <span className={`text-sm ${isAvailable ? "text-foreground" : "text-muted-foreground"}`}>
+                      <span className={`text-sm ${isAvailable ? "" : "text-muted-foreground"}`}>
                         {feature.label}
                       </span>
                     </div>
@@ -79,20 +71,13 @@ const DashboardUsagePage = () => {
               </div>
             ) : null}
           </div>
-        </motion.div>
+        </div>
 
         {/* Plan Comparison */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-xl sm:rounded-2xl border border-border/50 bg-card overflow-hidden"
-        >
-          <div className="p-4 sm:p-6 border-b border-border/50">
-            <h3 className="font-display font-semibold text-base sm:text-lg">Plan Limits Comparison</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              See how different plans compare
-            </p>
+        <div className="rounded-xl border border-border bg-card">
+          <div className="p-5 border-b border-border">
+            <h3 className="font-semibold">Plan Comparison</h3>
+            <p className="text-sm text-muted-foreground">See how plans compare</p>
           </div>
 
           {/* Mobile: Card Layout */}
@@ -100,34 +85,26 @@ const DashboardUsagePage = () => {
             {Object.entries(PLAN_LIMITS).map(([key, plan]) => (
               <div
                 key={key}
-                className={`p-4 rounded-lg border ${
-                  planData?.plan === key 
-                    ? "border-primary/50 bg-primary/5" 
-                    : "border-border/30 bg-muted/20"
+                className={`p-4 rounded-lg ${
+                  planData?.plan === key
+                    ? "bg-primary/5 border border-primary/20"
+                    : "bg-secondary/50"
                 }`}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-semibold">{plan.name}</span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium">{plan.name}</span>
                   {planData?.plan === key && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                      Current
-                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">Current</span>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-muted-foreground text-xs">Chatbots</p>
-                    <p className="font-medium">
-                      {plan.chatbots === Infinity ? "Unlimited" : plan.chatbots}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Chatbots</p>
+                    <p className="font-medium">{plan.chatbots === Infinity ? "∞" : plan.chatbots}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">Messages/Month</p>
-                    <p className="font-medium">
-                      {plan.messagesPerMonth === Infinity
-                        ? "Unlimited"
-                        : plan.messagesPerMonth.toLocaleString()}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Messages</p>
+                    <p className="font-medium">{plan.messagesPerMonth === Infinity ? "∞" : plan.messagesPerMonth.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -138,42 +115,36 @@ const DashboardUsagePage = () => {
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/50">
-                  <th className="text-left p-4 font-medium text-muted-foreground">Plan</th>
-                  <th className="text-center p-4 font-medium text-muted-foreground">Chatbots</th>
-                  <th className="text-center p-4 font-medium text-muted-foreground">Messages/Month</th>
+                <tr className="border-b border-border">
+                  <th className="text-left p-4 font-medium text-muted-foreground text-xs uppercase tracking-wide">Plan</th>
+                  <th className="text-center p-4 font-medium text-muted-foreground text-xs uppercase tracking-wide">Chatbots</th>
+                  <th className="text-center p-4 font-medium text-muted-foreground text-xs uppercase tracking-wide">Messages</th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(PLAN_LIMITS).map(([key, plan]) => (
                   <tr
                     key={key}
-                    className={`border-b border-border/30 ${
-                      planData?.plan === key ? "bg-primary/5" : ""
-                    }`}
+                    className={`border-b border-border/50 ${planData?.plan === key ? "bg-primary/5" : ""}`}
                   >
                     <td className="p-4 font-medium">
                       {plan.name}
                       {planData?.plan === key && (
-                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                          Current
-                        </span>
+                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">Current</span>
                       )}
                     </td>
                     <td className="text-center p-4">
                       {plan.chatbots === Infinity ? "Unlimited" : plan.chatbots}
                     </td>
                     <td className="text-center p-4">
-                      {plan.messagesPerMonth === Infinity
-                        ? "Unlimited"
-                        : plan.messagesPerMonth.toLocaleString()}
+                      {plan.messagesPerMonth === Infinity ? "Unlimited" : plan.messagesPerMonth.toLocaleString()}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </motion.div>
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { format } from "date-fns";
 import {
   AreaChart,
@@ -30,11 +29,10 @@ import {
   MessageCircle,
   Users,
   TrendingUp,
-  BarChart3,
   Activity,
 } from "lucide-react";
 
-const COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f97316", "#22c55e", "#06b6d4"];
+const COLORS = ["hsl(var(--primary))", "#8b5cf6", "#06b6d4", "#22c55e", "#f97316", "#ec4899"];
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState<string>("30");
@@ -80,16 +78,16 @@ const Analytics = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8 space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
           <div>
-            <h1 className="font-display text-3xl font-bold">Global Analytics</h1>
-            <p className="text-muted-foreground mt-1">Track performance across all chatbots</p>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold">Analytics</h1>
+            <p className="text-muted-foreground text-sm mt-1">Performance across all chatbots</p>
           </div>
           <div className="flex gap-3">
             <Select value={selectedChatbot} onValueChange={setSelectedChatbot}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="All chatbots" />
               </SelectTrigger>
               <SelectContent>
@@ -102,7 +100,7 @@ const Analytics = () => {
               </SelectContent>
             </Select>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[130px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -116,130 +114,104 @@ const Analytics = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-[400px]">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <>
-            {/* Stats Cards */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
-                <motion.div
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {stats.map((stat) => (
+                <div
                   key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6"
+                  className="p-4 rounded-xl border border-border bg-card"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`} />
-                  <div className="relative">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-4`}>
-                      <stat.icon className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
+                      <stat.icon className="w-4 h-4 text-foreground/70" />
                     </div>
-                    <p className="text-3xl font-display font-bold mb-1">
-                      {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-                    </p>
-                    <p className="text-muted-foreground text-sm">{stat.label}</p>
+                    <span className="text-sm text-muted-foreground">{stat.label}</span>
                   </div>
-                </motion.div>
+                  <p className="text-2xl font-semibold">
+                    {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
+                  </p>
+                </div>
               ))}
             </div>
 
             {/* Charts Row */}
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid lg:grid-cols-2 gap-4">
               {/* Conversations Chart */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="rounded-2xl border border-border/50 bg-card p-6"
+              <div
+                className="rounded-xl border border-border bg-card p-5"
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                    <MessageCircle className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="font-display text-lg font-semibold">Conversations Over Time</h2>
-                </div>
-                <div className="h-[300px]">
+                <h2 className="font-medium mb-4">Conversations</h2>
+                <div className="h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="colorConv" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                      <XAxis dataKey="dateLabel" className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
-                      <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "hsl(var(--card))",
                           borderColor: "hsl(var(--border))",
-                          borderRadius: "12px",
+                          borderRadius: "8px",
+                          fontSize: "12px",
                         }}
                       />
                       <Area
                         type="monotone"
                         dataKey="conversations"
-                        stroke="#3b82f6"
+                        stroke="hsl(var(--primary))"
                         strokeWidth={2}
                         fill="url(#colorConv)"
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Leads Chart */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="rounded-2xl border border-border/50 bg-card p-6"
+              <div
+                className="rounded-xl border border-border bg-card p-5"
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="font-display text-lg font-semibold">Leads Captured</h2>
-                </div>
-                <div className="h-[300px]">
+                <h2 className="font-medium mb-4">Leads</h2>
+                <div className="h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                      <XAxis dataKey="dateLabel" className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
-                      <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "hsl(var(--card))",
                           borderColor: "hsl(var(--border))",
-                          borderRadius: "12px",
+                          borderRadius: "8px",
+                          fontSize: "12px",
                         }}
                       />
                       <Bar dataKey="leads" fill="#22c55e" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </motion.div>
+              </div>
             </div>
 
             {/* Chatbot Breakdown */}
             {analytics?.chatbotBreakdown && analytics.chatbotBreakdown.length > 1 && (
-              <div className="grid lg:grid-cols-2 gap-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="rounded-2xl border border-border/50 bg-card p-6"
+              <div className="grid lg:grid-cols-2 gap-4">
+                <div
+                  className="rounded-xl border border-border bg-card p-5"
                 >
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
-                      <BarChart3 className="w-5 h-5 text-white" />
-                    </div>
-                    <h2 className="font-display text-lg font-semibold">Conversations by Chatbot</h2>
-                  </div>
-                  <div className="h-[250px] flex items-center justify-center">
+                  <h2 className="font-medium mb-4">By Chatbot</h2>
+                  <div className="h-[220px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -248,8 +220,8 @@ const Analytics = () => {
                           nameKey="name"
                           cx="50%"
                           cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
+                          innerRadius={50}
+                          outerRadius={80}
                           paddingAngle={2}
                         >
                           {analytics.chatbotBreakdown.map((_, index) => (
@@ -260,65 +232,56 @@ const Analytics = () => {
                           contentStyle={{
                             backgroundColor: "hsl(var(--card))",
                             borderColor: "hsl(var(--border))",
-                            borderRadius: "12px",
+                            borderRadius: "8px",
+                            fontSize: "12px",
                           }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="flex flex-wrap justify-center gap-4 mt-4">
+                  <div className="flex flex-wrap justify-center gap-3 mt-2">
                     {analytics.chatbotBreakdown.map((bot, index) => (
                       <div key={bot.id} className="flex items-center gap-2">
                         <div
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: COLORS[index % COLORS.length] }}
                         />
-                        <span className="text-sm text-muted-foreground">{bot.name}</span>
+                        <span className="text-xs text-muted-foreground">{bot.name}</span>
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="rounded-2xl border border-border/50 bg-card p-6"
+                <div
+                  className="rounded-xl border border-border bg-card p-5"
                 >
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-white" />
-                    </div>
-                    <h2 className="font-display text-lg font-semibold">Performance by Chatbot</h2>
-                  </div>
-                  <div className="space-y-4">
+                  <h2 className="font-medium mb-4">Performance</h2>
+                  <div className="space-y-3">
                     {analytics.chatbotBreakdown.map((bot, index) => {
                       const convRate = bot.conversations > 0
                         ? Math.round((bot.leads / bot.conversations) * 100)
                         : 0;
                       return (
-                        <div key={bot.id} className="p-4 rounded-xl bg-secondary/50">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                              />
-                              <span className="font-medium">{bot.name}</span>
-                            </div>
-                            <span className="text-sm font-semibold text-green-500">
+                        <div key={bot.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-2.5 h-2.5 rounded-full"
+                              style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                            />
+                            <span className="text-sm font-medium">{bot.name}</span>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="text-muted-foreground">{bot.conversations} chats</span>
+                            <span className="text-muted-foreground">{bot.leads} leads</span>
+                            <span className="font-medium text-green-600 dark:text-green-400">
                               {convRate}% conversion
                             </span>
-                          </div>
-                          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                            <span>{bot.conversations} conversations</span>
-                            <span>{bot.leads} leads</span>
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                </motion.div>
+                </div>
               </div>
             )}
           </>

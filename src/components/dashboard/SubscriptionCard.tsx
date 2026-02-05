@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Crown, Calendar, ArrowUpRight, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { Crown, Calendar, ArrowUpRight, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription, useCancelSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
@@ -81,15 +80,11 @@ export const SubscriptionCard = () => {
 
   if (isLoading) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6"
-      >
+      <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -97,29 +92,23 @@ export const SubscriptionCard = () => {
   if (!subscription) {
     return (
       <>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl sm:rounded-2xl border border-dashed border-border bg-card/50 p-4 sm:p-6"
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-5">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+                <Crown className="w-5 h-5 text-muted-foreground" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm sm:text-base">Free Plan</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Upgrade to unlock more features
-                </p>
+                <h3 className="font-medium">Free Plan</h3>
+                <p className="text-sm text-muted-foreground">Upgrade to unlock more features</p>
               </div>
             </div>
-            <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80" onClick={() => setPricingOpen(true)}>
-              <ArrowUpRight className="w-4 h-4 mr-1" />
+            <Button size="sm" onClick={() => setPricingOpen(true)}>
               Upgrade
+              <ArrowUpRight className="w-4 h-4" />
             </Button>
           </div>
-        </motion.div>
+        </div>
         <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
       </>
     );
@@ -130,29 +119,21 @@ export const SubscriptionCard = () => {
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-border/50 bg-card"
-      >
-        {/* Gradient accent */}
-        <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${plan.gradient}`} />
-
-        <div className="p-4 sm:p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="rounded-xl border border-border bg-card p-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Plan info */}
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center`}>
-                <Crown className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Crown className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-display font-bold text-lg sm:text-xl">{plan.name} Plan</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-500">
+                  <h3 className="font-semibold">{plan.name} Plan</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
                     Active
                   </span>
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-xs sm:text-sm text-muted-foreground">
+                <div className="flex items-center gap-3 mt-0.5 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
                     Expires: {formatDate(subscription.expires_at)}
@@ -174,15 +155,14 @@ export const SubscriptionCard = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setPricingOpen(true)}
-                  className="text-xs sm:text-sm"
                 >
-                  <ArrowUpRight className="w-4 h-4 mr-1" />
                   Upgrade
+                  <ArrowUpRight className="w-4 h-4" />
                 </Button>
               )}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive text-xs sm:text-sm">
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
                     Cancel
                   </Button>
                 </AlertDialogTrigger>
@@ -207,10 +187,10 @@ export const SubscriptionCard = () => {
                 </AlertDialogContent>
               </AlertDialog>
             </div>
-          </div>
+        </div>
 
-          {/* Subscription details */}
-          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/50 grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {/* Subscription details */}
+        <div className="mt-4 pt-4 border-t border-border grid grid-cols-3 gap-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Started</p>
               <p className="text-sm font-medium">{formatDate(subscription.started_at)}</p>
@@ -219,15 +199,14 @@ export const SubscriptionCard = () => {
               <p className="text-xs text-muted-foreground mb-1">Next Billing</p>
               <p className="text-sm font-medium">{formatDate(subscription.expires_at)}</p>
             </div>
-            <div className="col-span-2 sm:col-span-1">
+            <div>
               <p className="text-xs text-muted-foreground mb-1">Transaction ID</p>
               <p className="text-sm font-medium font-mono truncate">
                 {subscription.dodo_transaction_id || "N/A"}
               </p>
             </div>
-          </div>
         </div>
-      </motion.div>
+      </div>
       <PricingModal 
         open={pricingOpen} 
         onOpenChange={setPricingOpen} 
