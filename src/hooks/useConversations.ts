@@ -14,6 +14,7 @@ interface Conversation {
   user_agent: string | null;
   category: string;
   archived_at: string | null;
+   platform: string;
   chatbot_name?: string;
   message_count?: number;
   last_message?: string;
@@ -63,6 +64,7 @@ export function useConversations(chatbotId?: string) {
         user_agent: conv.user_agent,
         category: conv.category || "general",
         archived_at: conv.archived_at,
+         platform: conv.platform || "widget",
         chatbot_name: conv.chatbots?.name,
         message_count: conv.messages?.length || 0,
         last_message: conv.messages?.sort((a: any, b: any) => 
