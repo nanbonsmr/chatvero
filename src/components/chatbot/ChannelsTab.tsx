@@ -1,9 +1,11 @@
- import { useState } from "react";
+ import { useState, useMemo } from "react";
  import { motion } from "framer-motion";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
  import { Label } from "@/components/ui/label";
  import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
  import {
    Dialog,
    DialogContent,
@@ -28,6 +30,10 @@
    Copy,
    Unplug,
    Settings2,
+   ChevronRight,
+   HelpCircle,
+   Sparkles,
+   AlertCircle,
  } from "lucide-react";
  
  interface PlatformConfig {
@@ -37,63 +43,142 @@
    color: string;
    bgColor: string;
    description: string;
-   fields: { key: string; label: string; placeholder: string; type?: string }[];
+  difficulty: "easy" | "medium" | "advanced";
+  setupTime: string;
+  fields: { key: string; label: string; placeholder: string; type?: string; help: string }[];
    docsUrl: string;
+  steps: string[];
  }
  
  const platforms: PlatformConfig[] = [
-   {
-     id: "facebook",
-     name: "Facebook Messenger",
-     icon: "📘",
-     color: "text-blue-600",
-     bgColor: "bg-blue-500/10",
-     description: "Reply to messages from your Facebook Page",
-     fields: [
-       { key: "page_access_token", label: "Page Access Token", placeholder: "EAA..." },
-       { key: "verify_token", label: "Verify Token", placeholder: "Your custom verify token" },
-     ],
-     docsUrl: "https://developers.facebook.com/docs/messenger-platform/getting-started",
-   },
-   {
-     id: "whatsapp",
-     name: "WhatsApp Business",
-     icon: "💬",
-     color: "text-green-600",
-     bgColor: "bg-green-500/10",
-     description: "Connect to WhatsApp Business API",
-     fields: [
-       { key: "phone_number_id", label: "Phone Number ID", placeholder: "1234567890" },
-       { key: "access_token", label: "Access Token", placeholder: "Your WhatsApp access token" },
-     ],
-     docsUrl: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
-   },
-   {
-     id: "instagram",
-     name: "Instagram DMs",
-     icon: "📸",
-     color: "text-pink-600",
-     bgColor: "bg-pink-500/10",
-     description: "Reply to Instagram Direct Messages",
-     fields: [
-       { key: "access_token", label: "Instagram Access Token", placeholder: "IGQ..." },
-       { key: "instagram_account_id", label: "Instagram Account ID", placeholder: "17841..." },
-     ],
-     docsUrl: "https://developers.facebook.com/docs/instagram-api/guides/messaging",
-   },
    {
      id: "telegram",
      name: "Telegram Bot",
      icon: "✈️",
      color: "text-sky-600",
      bgColor: "bg-sky-500/10",
-     description: "Create a Telegram bot that replies automatically",
+    description: "Easiest to set up! Create a bot that auto-replies on Telegram",
+    difficulty: "easy",
+    setupTime: "2 min",
      fields: [
-       { key: "bot_token", label: "Bot Token", placeholder: "123456:ABC-DEF..." },
+      { 
+        key: "bot_token", 
+        label: "Bot Token", 
+        placeholder: "123456:ABC-DEF...", 
+        help: "You'll get this from @BotFather after creating your bot"
+      },
      ],
      docsUrl: "https://core.telegram.org/bots#how-do-i-create-a-bot",
+    steps: [
+      "Open Telegram and search for @BotFather",
+      "Send /newbot and follow the prompts to name your bot",
+      "Copy the token that BotFather gives you",
+      "Paste the token below and click Connect"
+    ],
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp Business",
+    icon: "💬",
+    color: "text-green-600",
+    bgColor: "bg-green-500/10",
+    description: "Reply to WhatsApp messages automatically",
+    difficulty: "medium",
+    setupTime: "10 min",
+    fields: [
+      { 
+        key: "phone_number_id", 
+        label: "Phone Number ID", 
+        placeholder: "1234567890",
+        help: "Found in your WhatsApp Business dashboard under 'Phone Numbers'"
+      },
+      { 
+        key: "access_token", 
+        label: "Access Token", 
+        placeholder: "Your WhatsApp access token",
+        help: "Generate this in the Meta Business Suite API settings"
+      },
+    ],
+    docsUrl: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
+    steps: [
+      "Go to Meta Business Suite → WhatsApp → API Setup",
+      "Create or select your WhatsApp Business Account",
+      "Copy your Phone Number ID from the dashboard",
+      "Generate a permanent access token",
+      "Paste both values below"
+    ],
+  },
+  {
+    id: "facebook",
+    name: "Facebook Messenger",
+    icon: "📘",
+    color: "text-blue-600",
+    bgColor: "bg-blue-500/10",
+    description: "Auto-reply to your Facebook Page messages",
+    difficulty: "medium",
+    setupTime: "10 min",
+    fields: [
+      { 
+        key: "page_access_token", 
+        label: "Page Access Token", 
+        placeholder: "EAA...",
+        help: "Get this from your Facebook Page Settings → Advanced Messaging"
+      },
+      { 
+        key: "verify_token", 
+        label: "Verify Token", 
+        placeholder: "any-secret-word-you-choose",
+        help: "Make up any secret word (e.g., 'mybot123'). You'll use this same word in Facebook's webhook settings"
+      },
+    ],
+    docsUrl: "https://developers.facebook.com/docs/messenger-platform/getting-started",
+    steps: [
+      "Go to Facebook Developers → Create or select your app",
+      "Add the 'Messenger' product to your app",
+      "Generate a Page Access Token for your Facebook Page",
+      "Create any verify token (a secret word you'll remember)",
+      "Paste both values below, then set up the webhook in Facebook"
+    ],
+  },
+  {
+    id: "instagram",
+    name: "Instagram DMs",
+    icon: "📸",
+    color: "text-pink-600",
+    bgColor: "bg-pink-500/10",
+    description: "Reply to Instagram Direct Messages",
+    difficulty: "advanced",
+    setupTime: "15 min",
+    fields: [
+      { 
+        key: "access_token", 
+        label: "Instagram Access Token", 
+        placeholder: "IGQ...",
+        help: "Requires a Facebook app with Instagram Graph API permissions"
+      },
+      { 
+        key: "instagram_account_id", 
+        label: "Instagram Account ID", 
+        placeholder: "17841...",
+        help: "Your Instagram Business Account ID (not your username)"
+      },
+    ],
+    docsUrl: "https://developers.facebook.com/docs/instagram-api/guides/messaging",
+    steps: [
+      "Connect your Instagram to a Facebook Business Page",
+      "Create a Facebook Developer app with Instagram Graph API",
+      "Request 'instagram_manage_messages' permission",
+      "Get your Instagram Account ID from the API",
+      "Generate an access token with proper permissions"
+    ],
    },
  ];
+
+const difficultyConfig = {
+  easy: { label: "Beginner Friendly", color: "bg-green-500/10 text-green-600 border-green-200" },
+  medium: { label: "Intermediate", color: "bg-amber-500/10 text-amber-600 border-amber-200" },
+  advanced: { label: "Advanced", color: "bg-red-500/10 text-red-600 border-red-200" },
+};
  
  interface ChannelsTabProps {
    chatbotId: string;
@@ -110,12 +195,20 @@
    const [credentials, setCredentials] = useState<Record<string, string>>({});
    const [isConnecting, setIsConnecting] = useState(false);
    const [copiedWebhook, setCopiedWebhook] = useState<string | null>(null);
+   const [currentStep, setCurrentStep] = useState(0);
+   const [showWebhookHelp, setShowWebhookHelp] = useState(false);
  
    const getChannelForPlatform = (platformId: Platform): ChatbotChannel | undefined => {
      return channels?.find((c) => c.platform === platformId);
    };
  
    const webhookUrl = `https://czhltxnpaukjqmtgrgzc.supabase.co/functions/v1/social-webhook`;
+
+   // Check if all fields are filled
+   const allFieldsFilled = useMemo(() => {
+     if (!selectedPlatform) return false;
+     return selectedPlatform.fields.every((f) => credentials[f.key]?.trim());
+   }, [selectedPlatform, credentials]);
  
    const handleConnect = async () => {
      if (!selectedPlatform) return;
@@ -230,7 +323,18 @@
          <div>
            <h2 className="font-display text-lg font-semibold">Social Media Channels</h2>
            <p className="text-sm text-muted-foreground">
-             Connect platforms to let your chatbot reply on social media
+            Let your AI chatbot automatically reply on social media
+           </p>
+         </div>
+       </div>
+
+       {/* Quick tip */}
+       <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+         <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+         <div>
+           <p className="text-sm font-medium">New to social integrations?</p>
+           <p className="text-xs text-muted-foreground mt-0.5">
+             Start with <strong>Telegram</strong> – it's the easiest to set up and takes just 2 minutes!
            </p>
          </div>
        </div>
@@ -269,10 +373,21 @@
                  </div>
  
                  <div className="flex-1 min-w-0">
-                   <h3 className="font-semibold text-sm sm:text-base">{platform.name}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-sm sm:text-base">{platform.name}</h3>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-[10px] ${difficultyConfig[platform.difficulty].color}`}
+                      >
+                        {difficultyConfig[platform.difficulty].label}
+                      </Badge>
+                    </div>
                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                      {platform.description}
                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      ⏱️ Setup time: ~{platform.setupTime}
+                    </p>
  
                    {isConnected && channel ? (
                      <div className="mt-3 space-y-3">
@@ -308,6 +423,7 @@
                              onClick={() => {
                                setSelectedPlatform(platform);
                                setCredentials(channel.credentials);
+                                setCurrentStep(0);
                              }}
                              className="h-7 w-7 p-0"
                              title="Edit settings"
@@ -329,21 +445,23 @@
                        {/* Connection info */}
                        {channel.connected_at && (
                          <p className="text-xs text-muted-foreground">
-                           Connected {new Date(channel.connected_at).toLocaleDateString()}
+                            ✅ Connected {new Date(channel.connected_at).toLocaleDateString()}
                          </p>
                        )}
                      </div>
                    ) : (
                      <Button
                        size="sm"
-                       variant="outline"
+                        variant={platform.difficulty === "easy" ? "default" : "outline"}
                        className="mt-3 h-8 text-xs sm:text-sm"
                        onClick={() => {
                          setSelectedPlatform(platform);
                          setCredentials({});
+                          setCurrentStep(0);
                        }}
                      >
-                       Connect
+                        {platform.difficulty === "easy" ? "Quick Setup" : "Connect"}
+                        <ChevronRight className="w-3.5 h-3.5 ml-1" />
                      </Button>
                    )}
                  </div>
@@ -360,56 +478,141 @@
            if (!open) {
              setSelectedPlatform(null);
              setCredentials({});
+            setCurrentStep(0);
+            setShowWebhookHelp(false);
            }
          }}
        >
-         <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
            <DialogHeader>
              <DialogTitle className="flex items-center gap-2">
                <span className="text-2xl">{selectedPlatform?.icon}</span>
                Connect {selectedPlatform?.name}
              </DialogTitle>
-             <DialogDescription>
-               Enter your API credentials to connect this platform
+            <DialogDescription className="flex items-center gap-2">
+              <Badge 
+                variant="outline" 
+                className={selectedPlatform ? difficultyConfig[selectedPlatform.difficulty].color : ""}
+              >
+                {selectedPlatform && difficultyConfig[selectedPlatform.difficulty].label}
+              </Badge>
+              <span>~{selectedPlatform?.setupTime} setup</span>
              </DialogDescription>
            </DialogHeader>
  
            <div className="space-y-4 py-4">
+            {/* Step-by-step guide */}
+            <Accordion type="single" collapsible defaultValue="steps">
+              <AccordionItem value="steps" className="border rounded-lg px-3">
+                <AccordionTrigger className="text-sm font-medium hover:no-underline">
+                  <span className="flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4 text-primary" />
+                    Step-by-step setup guide
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ol className="space-y-2 text-sm">
+                    {selectedPlatform?.steps.map((step, index) => (
+                      <li 
+                        key={index} 
+                        className={`flex items-start gap-2 p-2 rounded-lg transition-colors ${
+                          currentStep === index ? "bg-primary/10" : ""
+                        }`}
+                      >
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium shrink-0 ${
+                          currentStep > index 
+                            ? "bg-green-500 text-white" 
+                            : currentStep === index 
+                              ? "bg-primary text-primary-foreground" 
+                              : "bg-muted text-muted-foreground"
+                        }`}>
+                          {currentStep > index ? <Check className="w-3 h-3" /> : index + 1}
+                        </span>
+                        <span className="text-muted-foreground">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <a
+                    href={selectedPlatform?.docsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-primary hover:underline mt-3"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Official documentation
+                  </a>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            {/* Credential fields */}
+            <div className="space-y-4 pt-2">
+              <p className="text-sm font-medium">Enter your credentials:</p>
              {selectedPlatform?.fields.map((field) => (
-               <div key={field.key}>
-                 <Label htmlFor={field.key}>{field.label}</Label>
+              <div key={field.key} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor={field.key}>{field.label}</Label>
+                  {credentials[field.key]?.trim() && (
+                    <Check className="w-4 h-4 text-green-500" />
+                  )}
+                </div>
                  <Input
                    id={field.key}
                    type={field.type || "text"}
                    placeholder={field.placeholder}
                    value={credentials[field.key] || ""}
-                   onChange={(e) =>
-                     setCredentials({ ...credentials, [field.key]: e.target.value })
-                   }
-                   className="mt-1.5 font-mono text-sm"
+                  onChange={(e) => {
+                    setCredentials({ ...credentials, [field.key]: e.target.value });
+                    // Update step based on filled fields
+                    const filledCount = Object.values({ ...credentials, [field.key]: e.target.value })
+                      .filter(v => v?.trim()).length;
+                    setCurrentStep(Math.min(filledCount + (selectedPlatform?.steps.length || 1) - selectedPlatform!.fields.length, (selectedPlatform?.steps.length || 1) - 1));
+                  }}
+                  className="font-mono text-sm"
                  />
+                <p className="text-xs text-muted-foreground flex items-start gap-1">
+                  <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
+                  {field.help}
+                </p>
                </div>
              ))}
+            </div>
  
-             <div className="p-3 rounded-lg bg-muted/50 space-y-2">
-               <p className="text-xs font-medium">Webhook URL</p>
-               <p className="text-xs text-muted-foreground break-all font-mono">
-                 {webhookUrl}?platform={selectedPlatform?.id}&token=[auto-generated]
-               </p>
-               <p className="text-xs text-muted-foreground">
-                 Use this URL in your {selectedPlatform?.name} webhook settings
-               </p>
-             </div>
- 
-             <a
-               href={selectedPlatform?.docsUrl}
-               target="_blank"
-               rel="noopener noreferrer"
-               className="flex items-center gap-1.5 text-xs text-primary hover:underline"
-             >
-               <ExternalLink className="w-3.5 h-3.5" />
-               View setup documentation
-             </a>
+            {/* Webhook info - collapsible for advanced users */}
+            {(selectedPlatform?.id === "facebook" || selectedPlatform?.id === "instagram" || selectedPlatform?.id === "whatsapp") && (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-200 space-y-2">
+                <button 
+                  onClick={() => setShowWebhookHelp(!showWebhookHelp)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <p className="text-xs font-medium text-amber-700">⚠️ Important: Webhook Setup Required</p>
+                  <ChevronRight className={`w-4 h-4 text-amber-600 transition-transform ${showWebhookHelp ? "rotate-90" : ""}`} />
+                </button>
+                {showWebhookHelp && (
+                  <div className="space-y-2 pt-2">
+                    <p className="text-xs text-amber-700">
+                      After connecting, you'll need to add this webhook URL to your {selectedPlatform?.name} settings:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 text-[10px] bg-background p-2 rounded break-all">
+                        {webhookUrl}?platform={selectedPlatform?.id}&token=[shown after connect]
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 shrink-0"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${webhookUrl}?platform=${selectedPlatform?.id}&token=YOUR_TOKEN`);
+                          toast({ title: "Copied!", description: "Webhook URL copied" });
+                        }}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
            </div>
  
            <div className="flex gap-3">
@@ -422,13 +625,16 @@
              </Button>
              <Button
                onClick={handleConnect}
-               disabled={isConnecting}
+              disabled={isConnecting || !allFieldsFilled}
                className="flex-1 bg-gradient-to-r from-primary to-primary/80"
              >
                {isConnecting ? (
                  <Loader2 className="w-4 h-4 animate-spin" />
                ) : (
-                 "Connect"
+                <>
+                  <Check className="w-4 h-4 mr-1" />
+                  Connect {selectedPlatform?.name}
+                </>
                )}
              </Button>
            </div>
@@ -437,13 +643,28 @@
  
        {/* Info Box */}
        <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
-         <h4 className="font-medium text-sm mb-2">How it works</h4>
-         <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-           <li>Connect your social media account using API credentials</li>
-           <li>Configure the webhook URL in your platform's developer settings</li>
-           <li>Your chatbot will automatically reply to incoming messages</li>
-           <li>All conversations are logged in your dashboard</li>
-         </ol>
+        <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
+          <HelpCircle className="w-4 h-4" />
+          How it works
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-3 text-xs text-muted-foreground">
+          <div className="flex items-start gap-2">
+            <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-[10px] font-bold">1</span>
+            <span>Connect your social account with API credentials (we guide you through it!)</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-[10px] font-bold">2</span>
+            <span>Your chatbot automatically replies when someone messages you</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-[10px] font-bold">3</span>
+            <span>All conversations appear in your dashboard</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-[10px] font-bold">4</span>
+            <span>Toggle channels on/off anytime without losing settings</span>
+          </div>
+        </div>
        </div>
      </div>
    );
