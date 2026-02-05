@@ -19,6 +19,34 @@ const SUPABASE_URL = "https://czhltxnpaukjqmtgrgzc.supabase.co";
    updated_at: string;
  }
  
+export interface SetupResult {
+  success: boolean;
+  message: string;
+  webhook_url: string;
+  bot_name?: string;
+  instructions?: string[];
+}
+
+// Helper function to setup social channel webhook
+async function setupSocialChannel(
+  platform: Platform,
+  channelId: string,
+  credentials: Record<string, string>,
+  webhookToken: string
+): Promise<SetupResult> {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/setup-social-channel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      platform,
+      channel_id: channelId,
+      credentials,
+      webhook_token: webhookToken,
+    }),
+  });
+  return response.json();
+}
+
  export const useChannels = (chatbotId: string | undefined) => {
    return useQuery({
      queryKey: ["channels", chatbotId],
@@ -81,25 +109,18 @@ const SUPABASE_URL = "https://czhltxnpaukjqmtgrgzc.supabase.co";
          if (error) throw error;
       const channel = data as ChatbotChannel;
       
-      // Auto-register webhook for Telegram
-      if (platform === "telegram" && credentials.bot_token) {
-        try {
-          const response = await fetch(`${SUPABASE_URL}/functions/v1/register-telegram-webhook`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              channel_id: channel.id,
-              bot_token: credentials.bot_token,
-              webhook_token: channel.webhook_token,
-            }),
-          });
-          const result = await response.json();
-          if (!result.success) {
-            console.error("Telegram webhook registration failed:", result);
-          }
-        } catch (err) {
-          console.error("Failed to register Telegram webhook:", err);
-        }
+      // Auto-setup webhook for all platforms
+      try {
+        const setupResult = await setupSocialChannel(
+          platform,
+          channel.id,
+          credentials,
+          channel.webhook_token
+        );
+        // Attach setup result to channel for UI to display
+        (channel as any).setupResult = setupResult;
+      } catch (err) {
+        console.error("Failed to setup channel webhook:", err);
       }
       
       return channel;
@@ -122,25 +143,18 @@ const SUPABASE_URL = "https://czhltxnpaukjqmtgrgzc.supabase.co";
          if (error) throw error;
       const channel = data as ChatbotChannel;
       
-      // Auto-register webhook for Telegram
-      if (platform === "telegram" && credentials.bot_token) {
-        try {
-          const response = await fetch(`${SUPABASE_URL}/functions/v1/register-telegram-webhook`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              channel_id: channel.id,
-              bot_token: credentials.bot_token,
-              webhook_token: channel.webhook_token,
-            }),
-          });
-          const result = await response.json();
-          if (!result.success) {
-            console.error("Telegram webhook registration failed:", result);
-          }
-        } catch (err) {
-          console.error("Failed to register Telegram webhook:", err);
-        }
+      // Auto-setup webhook for all platforms
+      try {
+        const setupResult = await setupSocialChannel(
+          platform,
+          channel.id,
+          credentials,
+          channel.webhook_token
+        );
+        // Attach setup result to channel for UI to display
+        (channel as any).setupResult = setupResult;
+      } catch (err) {
+        console.error("Failed to setup channel webhook:", err);
       }
       
       return channel;

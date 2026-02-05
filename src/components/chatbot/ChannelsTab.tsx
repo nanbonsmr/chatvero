@@ -197,6 +197,12 @@ const difficultyConfig = {
    const [copiedWebhook, setCopiedWebhook] = useState<string | null>(null);
    const [currentStep, setCurrentStep] = useState(0);
    const [showWebhookHelp, setShowWebhookHelp] = useState(false);
+  const [setupResult, setSetupResult] = useState<{
+    success: boolean;
+    message: string;
+    webhook_url: string;
+    instructions?: string[];
+  } | null>(null);
  
    const getChannelForPlatform = (platformId: Platform): ChatbotChannel | undefined => {
      return channels?.find((c) => c.platform === platformId);
@@ -228,18 +234,30 @@ const difficultyConfig = {
  
      setIsConnecting(true);
      try {
-       await connectChannel.mutateAsync({
+      const result = await connectChannel.mutateAsync({
          chatbotId,
          platform: selectedPlatform.id,
          credentials,
        });
  
-       toast({
-         title: "Channel connected!",
-         description: `${selectedPlatform.name} is now connected to your chatbot`,
-       });
-       setSelectedPlatform(null);
-       setCredentials({});
+      // Check if there are setup instructions to show (for Meta platforms)
+      const setupData = (result as any).setupResult;
+      if (setupData?.instructions && setupData.instructions.length > 0) {
+        setSetupResult(setupData);
+        toast({
+          title: setupData.success ? "Credentials verified!" : "Connection issue",
+          description: setupData.message,
+          variant: setupData.success ? "default" : "destructive",
+        });
+      } else {
+        toast({
+          title: "Channel connected!",
+          description: setupData?.message || `${selectedPlatform.name} is now connected to your chatbot`,
+        });
+        setSelectedPlatform(null);
+        setCredentials({});
+        setSetupResult(null);
+      }
      } catch (error) {
        console.error("Connect error:", error);
        toast({
@@ -480,6 +498,7 @@ const difficultyConfig = {
              setCredentials({});
             setCurrentStep(0);
             setShowWebhookHelp(false);
+           setSetupResult(null);
            }
          }}
        >
@@ -500,7 +519,84 @@ const difficultyConfig = {
              </DialogDescription>
            </DialogHeader>
  
-           <div className="space-y-4 py-4">
+          {/* Setup Instructions (shown after connecting Meta platforms) */}
+          {setupResult && setupResult.instructions && setupResult.instructions.length > 0 ? (
+            <div className="space-y-4 py-4">
+              <div className={`p-4 rounded-lg ${setupResult.success ? 'bg-green-500/10 border border-green-500/20' : 'bg-destructive/10 border border-destructive/20'}`}>
+                <div className="flex items-start gap-2">
+                  {setupResult.success ? (
+                    <Check className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <p className="font-medium text-sm">{setupResult.success ? "Credentials verified!" : "Setup issue"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{setupResult.message}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-500" />
+                  Complete webhook setup in {selectedPlatform?.name}
+                </h4>
+                <ol className="space-y-2">
+                  {setupResult.instructions.map((instruction, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center shrink-0 mt-0.5">
+                        {idx + 1}
+                      </span>
+                      <span className="text-muted-foreground">{instruction}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+                <Label className="text-xs font-medium">Your Webhook URL (copy this)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={setupResult.webhook_url}
+                    className="text-xs font-mono"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(setupResult.webhook_url);
+                      toast({ title: "Copied!", description: "Webhook URL copied to clipboard" });
+                    }}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => window.open(selectedPlatform?.docsUrl, "_blank")}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Docs
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => {
+                    setSelectedPlatform(null);
+                    setCredentials({});
+                    setSetupResult(null);
+                  }}
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          ) : (
+          <div className="space-y-4 py-4">
             {/* Step-by-step guide */}
             <Accordion type="single" collapsible defaultValue="steps">
               <AccordionItem value="steps" className="border rounded-lg px-3">
@@ -614,8 +710,10 @@ const difficultyConfig = {
               </div>
             )}
            </div>
+          )}
  
-           <div className="flex gap-3">
+           {!setupResult && (
+            <div className="flex gap-3">
              <Button
                variant="outline"
                onClick={() => setSelectedPlatform(null)}
@@ -638,6 +736,7 @@ const difficultyConfig = {
                )}
              </Button>
            </div>
+          )}
          </DialogContent>
        </Dialog>
  

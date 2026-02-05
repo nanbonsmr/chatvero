@@ -27,5 +27,5 @@ verify_jwt = false
 [functions.social-webhook]
 verify_jwt = false
  
- [functions.register-telegram-webhook]
+ [functions.setup-social-channel]
  verify_jwt = false
