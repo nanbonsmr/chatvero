@@ -157,19 +157,22 @@
          throw new Error(`Chat function failed: ${errorText}`);
        }
  
-       // Parse the streamed response
+       // Parse the JSON response from chat function
        const responseText = await chatResponse.text();
-       const lines = responseText.split("\n").filter((line) => line.startsWith("data: "));
+       console.log("Chat response text:", responseText.substring(0, 300));
+       
        let aiMessage = "";
- 
-       for (const line of lines) {
-         try {
-           const data = JSON.parse(line.replace("data: ", ""));
-           if (data.content) {
-             aiMessage += data.content;
-           }
-         } catch (e) {
-           // Skip parsing errors
+       
+       try {
+         const data = JSON.parse(responseText);
+         aiMessage = data.message || "";
+         console.log("Parsed AI message from JSON:", aiMessage.substring(0, 100));
+       } catch (e) {
+         console.error("Failed to parse chat response as JSON:", e);
+         // Fallback: try to extract message if it's in different format
+         const messageMatch = responseText.match(/"message"\s*:\s*"([^"]*)"/);
+         if (messageMatch) {
+           aiMessage = messageMatch[1];
          }
        }
  
