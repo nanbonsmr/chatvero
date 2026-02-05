@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -18,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
+import { ChannelsTab } from "@/components/chatbot/ChannelsTab";
 import { 
   Save, 
   Loader2, 
@@ -36,6 +38,8 @@ import {
   Upload,
   Image,
   X,
+  Settings,
+  Share2,
 } from "lucide-react";
 
 const tones = [
@@ -321,14 +325,14 @@ const ChatbotSettings = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8 max-w-3xl">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl">
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="font-display text-2xl font-bold">Settings</h1>
+            <h1 className="font-display text-xl sm:text-2xl font-bold">Settings</h1>
             <p className="text-muted-foreground">{chatbot.website_url}</p>
           </div>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-gradient-to-r from-primary to-primary/80">
+          <Button onClick={handleSave} disabled={isSaving} className="bg-gradient-to-r from-primary to-primary/80 w-full sm:w-auto">
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
@@ -338,21 +342,37 @@ const ChatbotSettings = () => {
           </Button>
         </div>
 
-        <div className="space-y-8">
+        {/* Tabs */}
+        <Tabs defaultValue="general" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 h-auto p-1">
+            <TabsTrigger value="general" className="flex items-center gap-2 py-2.5 text-xs sm:text-sm">
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">General</span>
+              <span className="sm:hidden">General</span>
+            </TabsTrigger>
+            <TabsTrigger value="channels" className="flex items-center gap-2 py-2.5 text-xs sm:text-sm">
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Social Channels</span>
+              <span className="sm:hidden">Channels</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* General Tab */}
+          <TabsContent value="general" className="space-y-6 sm:space-y-8">
           {/* Status Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-2xl border border-border p-6"
+            className="bg-card rounded-xl sm:rounded-2xl border border-border p-4 sm:p-6"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${chatbot.is_active ? 'bg-green-500/10' : 'bg-muted'}`}>
-                  <Sparkles className={`w-6 h-6 ${chatbot.is_active ? 'text-green-500' : 'text-muted-foreground'}`} />
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${chatbot.is_active ? 'bg-green-500/10' : 'bg-muted'}`}>
+                  <Sparkles className={`w-5 h-5 sm:w-6 sm:h-6 ${chatbot.is_active ? 'text-green-500' : 'text-muted-foreground'}`} />
                 </div>
                 <div>
-                  <h2 className="font-semibold">Chatbot Status</h2>
-                  <p className="text-sm text-muted-foreground">
+                  <h2 className="font-semibold text-sm sm:text-base">Chatbot Status</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {chatbot.is_active ? "Active and responding to visitors" : "Disabled - not responding"}
                   </p>
                 </div>
@@ -369,23 +389,23 @@ const ChatbotSettings = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="bg-card rounded-2xl border border-border p-6"
+            className="bg-card rounded-xl sm:rounded-2xl border border-border p-4 sm:p-6"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="flex items-center gap-3 mb-3 sm:mb-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Code className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="font-display text-lg font-semibold">Embed Code</h2>
-                <p className="text-sm text-muted-foreground">Add this to your website</p>
+                <h2 className="font-display text-base sm:text-lg font-semibold">Embed Code</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">Add this to your website</p>
               </div>
             </div>
 
-            <div className="bg-secondary/50 rounded-xl p-4 font-mono text-sm break-all mb-4">
+            <div className="bg-secondary/50 rounded-lg sm:rounded-xl p-3 sm:p-4 font-mono text-xs sm:text-sm break-all mb-3 sm:mb-4">
               {embedCode}
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Button onClick={copyEmbedCode} variant="outline" className="flex-1">
                 {copied ? (
                   <>
@@ -407,7 +427,7 @@ const ChatbotSettings = () => {
               </Link>
             </div>
 
-            <p className="text-xs text-muted-foreground mt-3">
+            <p className="text-xs text-muted-foreground mt-2 sm:mt-3">
               Paste this code before the closing &lt;/body&gt; tag on your website
             </p>
           </motion.div>
@@ -777,7 +797,20 @@ const ChatbotSettings = () => {
               </SelectContent>
             </Select>
           </motion.div>
-        </div>
+
+          </TabsContent>
+
+          {/* Channels Tab */}
+          <TabsContent value="channels">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-card rounded-xl sm:rounded-2xl border border-border p-4 sm:p-6"
+            >
+              <ChannelsTab chatbotId={id!} />
+            </motion.div>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
