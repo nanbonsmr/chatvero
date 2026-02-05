@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useTopicAnalytics } from "@/hooks/useTopicAnalytics";
+ import { usePlatformAnalytics } from "@/hooks/usePlatformAnalytics";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   Loader2,
@@ -37,6 +38,8 @@ import {
   Database,
   Sparkles,
   HelpCircle,
+   Share2,
+   Globe,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -46,6 +49,7 @@ const ChatbotAnalytics = () => {
 
   const { data: analytics, isLoading } = useAnalytics(parseInt(timeRange), chatbotId);
   const { data: topicAnalytics, isLoading: topicsLoading } = useTopicAnalytics(parseInt(timeRange), chatbotId);
+   const { data: platformAnalytics, isLoading: platformLoading } = usePlatformAnalytics(parseInt(timeRange), chatbotId);
 
   const stats = [
     {
@@ -120,7 +124,7 @@ const ChatbotAnalytics = () => {
           </Select>
         </div>
 
-        {isLoading || topicsLoading ? (
+         {isLoading || topicsLoading || platformLoading ? (
           <div className="flex items-center justify-center h-[400px]">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
@@ -376,6 +380,132 @@ const ChatbotAnalytics = () => {
               </div>
             </motion.div>
 
+             {/* Platform Analytics */}
+             <motion.div
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.38 }}
+             >
+               <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                   <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                 </div>
+                 <div>
+                   <h2 className="font-display text-base sm:text-lg font-semibold">Channel Analytics</h2>
+                   <p className="text-xs sm:text-sm text-muted-foreground">Message volume by platform</p>
+                 </div>
+               </div>
+ 
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                 {/* Platform Distribution Pie Chart */}
+                 <div className="rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6">
+                   <h3 className="font-medium mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                     <Globe className="w-4 h-4 text-muted-foreground" />
+                     Platform Distribution
+                   </h3>
+                   {platformAnalytics?.platformStats && platformAnalytics.platformStats.length > 0 ? (
+                     <div className="h-[240px] sm:h-[280px]">
+                       <ResponsiveContainer width="100%" height="100%">
+                         <PieChart>
+                           <Pie
+                             data={platformAnalytics.platformStats}
+                             cx="50%"
+                             cy="50%"
+                             innerRadius={60}
+                             outerRadius={100}
+                             paddingAngle={2}
+                             dataKey="conversations"
+                             nameKey="label"
+                           >
+                             {platformAnalytics.platformStats.map((entry, index) => (
+                               <Cell key={`cell-${index}`} fill={entry.color} />
+                             ))}
+                           </Pie>
+                           <Tooltip
+                             contentStyle={{
+                               backgroundColor: "hsl(var(--card))",
+                               borderColor: "hsl(var(--border))",
+                               borderRadius: "12px",
+                             }}
+                             formatter={(value: number, name: string) => [
+                               `${value} conversations`,
+                               name,
+                             ]}
+                           />
+                           <Legend 
+                             verticalAlign="bottom" 
+                             height={36}
+                             formatter={(value) => (
+                               <span className="text-xs text-foreground">{value}</span>
+                             )}
+                           />
+                         </PieChart>
+                       </ResponsiveContainer>
+                     </div>
+                   ) : (
+                     <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+                       <p>No platform data available yet</p>
+                     </div>
+                   )}
+                 </div>
+ 
+                 {/* Platform Stats List */}
+                 <div className="rounded-xl sm:rounded-2xl border border-border/50 bg-card p-4 sm:p-6">
+                   <h3 className="font-medium mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                     <Share2 className="w-4 h-4 text-muted-foreground" />
+                     Platform Performance
+                   </h3>
+                   {platformAnalytics?.platformStats && platformAnalytics.platformStats.length > 0 ? (
+                     <div className="space-y-4">
+                       {platformAnalytics.platformStats.map((platform) => (
+                         <div key={platform.platform} className="space-y-2">
+                           <div className="flex items-center justify-between">
+                             <div className="flex items-center gap-2">
+                               <div 
+                                 className="w-3 h-3 rounded-full" 
+                                 style={{ backgroundColor: platform.color }}
+                               />
+                               <span className="text-sm font-medium">{platform.label}</span>
+                             </div>
+                             <span className="text-sm text-muted-foreground">
+                               {platform.conversations} conversations
+                             </span>
+                           </div>
+                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                             <span>{platform.messages} messages</span>
+                             <span>{platform.leads} leads</span>
+                           </div>
+                         </div>
+                       ))}
+                       
+                       {/* Summary stats */}
+                       <div className="pt-4 mt-4 border-t border-border/50">
+                         <div className="grid grid-cols-2 gap-4">
+                           <div className="text-center p-3 rounded-lg bg-muted/30">
+                             <p className="text-lg font-semibold text-primary">
+                               {platformAnalytics.totals.totalFromWidget}
+                             </p>
+                             <p className="text-xs text-muted-foreground">From Widget</p>
+                           </div>
+                           <div className="text-center p-3 rounded-lg bg-muted/30">
+                             <p className="text-lg font-semibold text-pink-500">
+                               {platformAnalytics.totals.totalFromSocial}
+                             </p>
+                             <p className="text-xs text-muted-foreground">From Social</p>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   ) : (
+                     <div className="h-[280px] flex items-center justify-center text-muted-foreground flex-col gap-2">
+                       <p>No conversations yet</p>
+                       <p className="text-xs">Connect social channels to see platform analytics</p>
+                     </div>
+                   )}
+                 </div>
+               </div>
+             </motion.div>
+ 
             {/* Knowledge Base Performance */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
