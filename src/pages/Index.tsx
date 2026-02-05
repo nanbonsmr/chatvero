@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
+ import { LogoCloud } from "@/components/landing/LogoCloud";
+ import { StatsSection } from "@/components/landing/StatsSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
+ import { IntegrationsSection } from "@/components/landing/IntegrationsSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+ import { UseCasesSection } from "@/components/landing/UseCasesSection";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+ import { FAQSection } from "@/components/landing/FAQSection";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
@@ -37,9 +42,14 @@ const Index = () => {
       <Navbar />
       <main className="relative z-10">
         <HeroSection />
+        <LogoCloud />
+        <StatsSection />
         <FeaturesSection />
+        <IntegrationsSection />
         <HowItWorksSection />
+        <UseCasesSection />
         <TestimonialsSection />
+        <FAQSection />
         <PricingSection />
         <CTASection />
       </main>
