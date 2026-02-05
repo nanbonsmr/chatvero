@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useChatbots, useDeleteChatbot } from "@/hooks/useChatbots";
@@ -23,17 +22,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  MessageSquare,
   Plus,
   Users,
   MessageCircle,
   ExternalLink,
   MoreVertical,
-  TrendingUp,
   Loader2,
   Trash2,
   ArrowRight,
-  Sparkles,
+  Bot,
+  Activity,
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -58,151 +56,117 @@ const Dashboard = () => {
     }
   };
 
-  // Calculate totals
   const totalChats = chatbots.reduce((sum, bot) => sum + bot.total_chats, 0);
   const totalLeads = chatbots.reduce((sum, bot) => sum + bot.leads_captured, 0);
-  const avgConversion = chatbots.length > 0
-    ? chatbots.reduce((sum, bot) => sum + bot.conversion_rate, 0) / chatbots.length
-    : 0;
-
-  const stats = [
-    { 
-      label: "Total Chatbots", 
-      value: chatbots.length, 
-      icon: MessageSquare,
-      gradient: "from-violet-500 to-purple-500",
-    },
-    { 
-      label: "Total Conversations", 
-      value: totalChats, 
-      icon: MessageCircle,
-      gradient: "from-blue-500 to-cyan-500",
-    },
-    { 
-      label: "Leads Captured", 
-      value: totalLeads, 
-      icon: Users,
-      gradient: "from-green-500 to-emerald-500",
-    },
-    { 
-      label: "Avg. Conversion", 
-      value: `${avgConversion.toFixed(1)}%`, 
-      icon: TrendingUp,
-      gradient: "from-orange-500 to-amber-500",
-    },
-  ];
 
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold">Dashboard</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Overview of all your chatbots
+              Manage and monitor your chatbots
             </p>
           </div>
           <Link to="/create-chatbot">
-            <Button size="sm" className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20">
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Button size="sm" className="w-full sm:w-auto">
+              <Plus className="w-4 h-4" />
               Create Chatbot
             </Button>
           </Link>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-border/50 bg-card p-3 sm:p-6"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5`} />
-              <div className="relative">
-                <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-2 sm:mb-4`}>
-                  <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <p className="text-xl sm:text-3xl font-display font-bold mb-0.5 sm:mb-1">
-                  {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-                </p>
-                <p className="text-muted-foreground text-xs sm:text-sm">{stat.label}</p>
-              </div>
-            </motion.div>
-          ))}
+        {/* Quick Stats Bar */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold">{chatbots.length}</p>
+              <p className="text-xs text-muted-foreground">Chatbots</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
+            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+              <MessageCircle className="w-5 h-5 text-foreground/70" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold">{totalChats.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">Conversations</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
+            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+              <Users className="w-5 h-5 text-foreground/70" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold">{totalLeads.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">Leads</p>
+            </div>
+          </div>
         </div>
+
         {/* Subscription */}
-        <div>
-          <h2 className="font-display text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Your Subscription</h2>
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Subscription</h2>
           <SubscriptionCard />
         </div>
 
         {/* Chatbots Grid */}
         <div>
-          <h2 className="font-display text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Your Chatbots</h2>
+          <h2 className="text-lg font-semibold mb-4">Your Chatbots</h2>
           
           {isLoading ? (
-            <div className="p-8 sm:p-12 text-center">
-              <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin mx-auto text-primary" />
-              <p className="text-muted-foreground mt-3 sm:mt-4 text-sm">Loading chatbots...</p>
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
           ) : chatbots.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl sm:rounded-2xl border border-dashed border-border bg-card/50 p-8 sm:p-12 text-center"
-            >
-              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                <Sparkles className="w-7 h-7 sm:w-10 sm:h-10 text-primary" />
+            <div className="rounded-xl border-2 border-dashed border-border bg-secondary/30 p-12 text-center">
+              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
+                <Bot className="w-6 h-6 text-muted-foreground" />
               </div>
-              <h3 className="font-display text-lg sm:text-xl font-semibold mb-2">Create your first chatbot</h3>
-              <p className="text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto text-sm">
-                Build an AI-powered chatbot trained on your website content to engage visitors and capture leads.
+              <h3 className="text-lg font-medium mb-2">No chatbots yet</h3>
+              <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
+                Create your first chatbot to start engaging visitors and capturing leads.
               </p>
               <Link to="/create-chatbot">
-                <Button size="lg" className="bg-gradient-to-r from-primary to-primary/80">
-                  <Plus className="w-5 h-5" />
-                  Create Chatbot
+                <Button>
+                  <Plus className="w-4 h-4" />
+                  Create Your First Chatbot
                 </Button>
               </Link>
-            </motion.div>
+            </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {chatbots.map((bot, index) => (
-                <motion.div
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {chatbots.map((bot) => (
+                <div
                   key={bot.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="group relative rounded-xl sm:rounded-2xl border border-border/50 bg-card overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+                  className="group rounded-xl border border-border bg-card hover:shadow-sm transition-all duration-200"
                 >
-                  {/* Gradient accent */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/50" />
-                  
-                  <div className="p-4 sm:p-6">
+                  <div className="p-5">
                     {/* Header */}
-                    <div className="flex items-start justify-between mb-3 sm:mb-4">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Bot className="w-5 h-5 text-primary" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-sm sm:text-base">{bot.name}</h3>
-                          <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full ${
+                        <div className="min-w-0">
+                          <h3 className="font-medium truncate">{bot.name}</h3>
+                          <span className={`inline-flex text-xs px-2 py-0.5 rounded-full ${
                             bot.is_active 
-                              ? "bg-green-500/10 text-green-500" 
-                              : "bg-muted text-muted-foreground"
+                              ? "bg-green-500/10 text-green-600 dark:text-green-400" 
+                              : "bg-secondary text-muted-foreground"
                           }`}>
-                            {bot.is_active ? "Active" : "Inactive"}
+                            {bot.is_active ? "Live" : "Inactive"}
                           </span>
                         </div>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -247,25 +211,26 @@ const Dashboard = () => {
                       href={bot.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs sm:text-sm text-muted-foreground hover:text-primary flex items-center gap-1 mb-4 sm:mb-6 truncate"
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mb-4 truncate transition-colors"
                     >
                       <span className="truncate">{bot.website_url}</span>
-                      <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                      <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-50" />
                     </a>
 
                     {/* Stats */}
-                    <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
-                      <div className="text-center p-2 sm:p-3 rounded-lg sm:rounded-xl bg-secondary/50">
-                        <p className="text-sm sm:text-lg font-semibold">{bot.total_chats}</p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Chats</p>
+                    <div className="flex items-center gap-4 py-3 border-y border-border/50 mb-4">
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-sm font-medium">{bot.total_chats}</span>
+                        <span className="text-xs text-muted-foreground">chats</span>
                       </div>
-                      <div className="text-center p-2 sm:p-3 rounded-lg sm:rounded-xl bg-secondary/50">
-                        <p className="text-sm sm:text-lg font-semibold">{bot.leads_captured}</p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Leads</p>
+                      <div className="flex items-center gap-2">
+                        <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-sm font-medium">{bot.leads_captured}</span>
+                        <span className="text-xs text-muted-foreground">leads</span>
                       </div>
-                      <div className="text-center p-2 sm:p-3 rounded-lg sm:rounded-xl bg-secondary/50">
-                        <p className="text-sm sm:text-lg font-semibold text-green-500">{bot.conversion_rate}%</p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Conv.</p>
+                      <div className="ml-auto">
+                        <span className="text-sm font-medium text-green-600 dark:text-green-400">{bot.conversion_rate}%</span>
                       </div>
                     </div>
 
@@ -273,14 +238,14 @@ const Dashboard = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full group/btn text-xs sm:text-sm"
+                      className="w-full group/btn"
                       onClick={() => navigate(`/chatbot/${bot.id}`)}
                     >
                       Open Dashboard
-                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-0.5 transition-transform" />
                     </Button>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
