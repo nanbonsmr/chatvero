@@ -1,8 +1,10 @@
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -12,3 +14,11 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /chatbot
+Disallow: /create-chatbot
+Disallow: /leads
+Disallow: /conversations
+Disallow: /analytics
+
+Sitemap: https://chatvero.lovable.app/sitemap.xml
