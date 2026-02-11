@@ -21,4 +21,4 @@ Disallow: /leads
 Disallow: /conversations
 Disallow: /analytics
 
-Sitemap: https://chatvero.lovable.app/sitemap.xml
+Sitemap: https://chatvero.netlify.app/sitemap.xml
