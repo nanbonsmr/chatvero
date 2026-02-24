@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface PricingHeroProps {
   isYearly: boolean;
@@ -9,6 +10,14 @@ interface PricingHeroProps {
 }
 
 export const PricingHero = ({ isYearly, onToggle }: PricingHeroProps) => {
+  const handleToggle = (value: boolean) => {
+    if (value) {
+      toast.info("Yearly plans are coming soon!", { description: "Stay tuned for discounted annual billing." });
+      return;
+    }
+    onToggle(value);
+  };
+
   return (
     <section className="pt-32 pb-16 sm:pt-40 sm:pb-20 relative overflow-hidden">
       {/* Background effects */}
@@ -67,14 +76,14 @@ export const PricingHero = ({ isYearly, onToggle }: PricingHeroProps) => {
               className={`text-sm font-medium cursor-pointer px-3 py-1.5 rounded-full transition-all duration-300 ${
                 !isYearly ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
               }`}
-              onClick={() => onToggle(false)}
+              onClick={() => handleToggle(false)}
             >
               Monthly
             </Label>
             <Switch 
               id="billing-toggle" 
               checked={isYearly} 
-              onCheckedChange={onToggle}
+              onCheckedChange={handleToggle}
               className="data-[state=checked]:bg-primary"
             />
             <div className="flex items-center gap-2">
@@ -83,7 +92,7 @@ export const PricingHero = ({ isYearly, onToggle }: PricingHeroProps) => {
                 className={`text-sm font-medium cursor-pointer px-3 py-1.5 rounded-full transition-all duration-300 ${
                   isYearly ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
                 }`}
-                onClick={() => onToggle(true)}
+                onClick={() => handleToggle(true)}
               >
                 Yearly
               </Label>

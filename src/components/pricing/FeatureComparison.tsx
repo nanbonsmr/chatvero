@@ -15,7 +15,7 @@ const features = [
     category: "Widgets & Usage",
     items: [
       { name: "Active widgets", starter: "1", growth: "5", business: "Unlimited" },
-      { name: "Monthly conversations", starter: "500", growth: "5,000", business: "Unlimited" },
+      { name: "Monthly messages", starter: "30,000", growth: "100,000", business: "Unlimited" },
       { name: "AI training sources", starter: "Basic", growth: "Advanced", business: "Custom" },
     ],
   },

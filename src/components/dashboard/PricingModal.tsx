@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Sparkles, Zap, Building2, X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,7 +29,7 @@ const plans = [
     yearlyPrice: 23,
     features: [
       "1 active widget",
-      "500 conversations/month",
+      "30,000 messages/month",
       "Lead capture form",
       "Email notifications",
     ],
@@ -43,7 +44,7 @@ const plans = [
     yearlyPrice: 63,
     features: [
       "Up to 5 widgets",
-      "5,000 conversations/month",
+      "100,000 messages/month",
       "Remove branding",
       "Performance analytics",
     ],
@@ -97,7 +98,10 @@ export const PricingModal = ({ open, onOpenChange, currentPlan }: PricingModalPr
           <Switch
             id="billing-toggle"
             checked={isYearly}
-            onCheckedChange={setIsYearly}
+            onCheckedChange={(v) => {
+              if (v) { toast.info("Yearly plans are coming soon!", { description: "Stay tuned for discounted annual billing." }); return; }
+              setIsYearly(v);
+            }}
           />
           <Label
             htmlFor="billing-toggle"

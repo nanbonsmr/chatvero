@@ -11,7 +11,7 @@ const plans = [
     description: "Perfect for small websites and personal projects",
     features: [
       "2 Chatbots",
-      "1,000 messages/month",
+      "30,000 messages/month",
       "Basic customization",
       "Email lead capture",
       "7-day chat history",
@@ -26,7 +26,7 @@ const plans = [
     description: "Best for growing businesses and teams",
     features: [
       "5 Chatbots",
-      "10,000 messages/month",
+      "100,000 messages/month",
       "Full customization",
       "Lead capture + CRM integration",
       "30-day chat history",

@@ -18,7 +18,7 @@ const plans = [
     features: [
       "2 active widgets",
       "Basic widget setup",
-      "1,000 messages/month",
+      "30,000 messages/month",
       "Standard customization",
       "Lead capture form",
       "Email notifications",
@@ -37,7 +37,7 @@ const plans = [
     features: [
       "Up to 5 widgets",
       "Advanced AI training",
-      "10,000 messages/month",
+      "100,000 messages/month",
       "Lead qualification flows",
       "Remove Chatvero branding",
       "Performance analytics",
