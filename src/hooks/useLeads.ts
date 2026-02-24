@@ -11,9 +11,6 @@ export interface Lead {
   name: string | null;
   custom_data: Record<string, unknown> | null;
   company_name: string | null;
-  linkedin_url: string | null;
-  enrichment_status: string | null;
-  enriched_data: any | null;
   created_at: string;
   chatbot_name?: string;
 }
@@ -71,7 +68,6 @@ export const useLeads = (filters?: {
       let filteredLeads: Lead[] = (leads || []).map((lead) => ({
         ...lead,
         custom_data: (lead.custom_data as Record<string, unknown>) || {},
-        enriched_data: lead.enriched_data,
         chatbot_name: chatbotMap.get(lead.chatbot_id) || "Unknown",
       }));
 

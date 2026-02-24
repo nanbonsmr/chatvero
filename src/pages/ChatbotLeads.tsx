@@ -23,7 +23,6 @@ import {
   Loader2,
   Users,
   Eye,
-  Linkedin,
   Building2,
   Calendar,
   Trash2,
@@ -219,7 +218,6 @@ const ChatbotLeads = () => {
                   <TableHead>Company</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
-                  <TableHead>Status</TableHead>
                    <TableHead>Captured</TableHead>
                    <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
@@ -271,14 +269,6 @@ const ChatbotLeads = () => {
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={
-                        lead.enrichment_status === 'completed' ? 'default' : 
-                        lead.enrichment_status === 'failed' ? 'destructive' : 'secondary'
-                      }>
-                        {lead.enrichment_status || 'pending'}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="text-muted-foreground">
                        {format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}
                     </TableCell>
@@ -319,7 +309,7 @@ const ChatbotLeads = () => {
                 {selectedLead?.name || "Lead Details"}
               </DialogTitle>
               <DialogDescription>
-                Detailed information captured and enriched for this lead
+                Detailed information captured for this lead
               </DialogDescription>
             </DialogHeader>
 
@@ -363,44 +353,6 @@ const ChatbotLeads = () => {
                   </div>
                 </div>
 
-                {/* Social/Status */}
-                <div className="flex flex-wrap gap-3 p-4 rounded-xl bg-muted/50 border border-border/50">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Status:</span>
-                    <Badge variant={
-                      selectedLead.enrichment_status === 'completed' ? 'default' : 
-                      selectedLead.enrichment_status === 'failed' ? 'destructive' : 'secondary'
-                    }>
-                      {selectedLead.enrichment_status || 'pending'}
-                    </Badge>
-                  </div>
-                  {selectedLead.linkedin_url && (
-                    <a
-                      href={selectedLead.linkedin_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-xs font-medium text-primary hover:underline ml-auto"
-                    >
-                      <Linkedin className="w-4 h-4" />
-                      LinkedIn Profile
-                    </a>
-                  )}
-                </div>
-
-                {/* Enriched Data Visualization */}
-                {selectedLead.enriched_data && Object.keys(selectedLead.enriched_data).length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-semibold flex items-center gap-2">
-                      <Badge variant="outline" className="text-[10px] uppercase font-bold">Enriched Insights</Badge>
-                    </h4>
-                    <div className="rounded-xl border border-border/50 bg-muted/30 p-4 space-y-4 overflow-hidden">
-                       <pre className="text-xs overflow-x-auto p-2 bg-black/5 dark:bg-white/5 rounded-lg">
-                        {JSON.stringify(selectedLead.enriched_data, null, 2)}
-                       </pre>
-                    </div>
-                  </div>
-                )}
-                
                 {selectedLead.custom_data && Object.keys(selectedLead.custom_data).length > 0 && (
                    <div className="space-y-3">
                     <h4 className="text-sm font-semibold">Custom Data</h4>
