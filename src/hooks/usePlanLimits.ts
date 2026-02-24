@@ -23,7 +23,7 @@ export const PLAN_LIMITS = {
   starter: {
     name: "Starter",
     chatbots: 2,
-    messagesPerMonth: 1000,
+    messagesPerMonth: 30000,
     features: {
       basicAnalytics: true,
       advancedAnalytics: false,
@@ -38,7 +38,7 @@ export const PLAN_LIMITS = {
   growth: {
     name: "Growth",
     chatbots: 5,
-    messagesPerMonth: 10000,
+    messagesPerMonth: 100000,
     features: {
       basicAnalytics: true,
       advancedAnalytics: true,

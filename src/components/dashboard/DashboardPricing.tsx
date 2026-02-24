@@ -3,6 +3,7 @@ import { Check, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useDodoCheckout } from "@/hooks/useDodoCheckout";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -12,7 +13,7 @@ const plans = [
     planKey: "starter" as const,
     features: [
       "2 Chatbots",
-      "1,000 messages/month",
+      "30,000 messages/month",
       "Basic analytics",
       "Email support",
       "Website widget",
@@ -26,7 +27,7 @@ const plans = [
     planKey: "growth" as const,
     features: [
       "5 Chatbots",
-      "10,000 messages/month",
+      "100,000 messages/month",
       "Advanced analytics",
       "Priority support",
       "Custom branding",
@@ -83,7 +84,10 @@ export const DashboardPricing = ({ currentPlan }: DashboardPricingProps) => {
           <span className={`text-sm ${!isYearly ? "text-foreground font-medium" : "text-muted-foreground"}`}>
             Monthly
           </span>
-          <Switch checked={isYearly} onCheckedChange={setIsYearly} />
+          <Switch checked={isYearly} onCheckedChange={(v) => {
+            if (v) { toast.info("Yearly plans are coming soon!", { description: "Stay tuned for discounted annual billing." }); return; }
+            setIsYearly(v);
+          }} />
           <span className={`text-sm ${isYearly ? "text-foreground font-medium" : "text-muted-foreground"}`}>
             Yearly
           </span>
