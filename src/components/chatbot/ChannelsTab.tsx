@@ -116,30 +116,23 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
     bgColor: "bg-blue-500/10",
     description: "Auto-reply to your Facebook Page messages",
     difficulty: "medium",
-    setupTime: "10 min",
+    setupTime: "5 min",
     fields: [
       { 
         key: "page_access_token", 
         label: "Page Access Token", 
         placeholder: "EAA...",
-        help: "Get this from your Facebook Page Settings → Advanced Messaging"
-      },
-      { 
-        key: "verify_token", 
-        label: "Verify Token", 
-        placeholder: "any-secret-word-you-choose",
-        help: "Make up any secret word (e.g., 'mybot123'). You'll use this same word in Facebook's webhook settings"
+        help: "Facebook Page Settings → Advanced Messaging → Access Tokens"
       },
     ],
     docsUrl: "https://developers.facebook.com/docs/messenger-platform/getting-started",
     steps: [
-      "Go to Facebook Developers → Create or select your app",
-      "Add the 'Messenger' product to your app",
-      "Generate a Page Access Token for your Facebook Page",
-      "Create any verify token (a secret word you'll remember)",
-      "Paste both values below, then set up the webhook in Facebook"
+      "Open your Facebook Page → Settings → Advanced Messaging",
+      "Generate a Page Access Token and copy it",
+      "Paste it below and click Connect"
     ],
   },
+
   {
     id: "instagram",
     name: "Instagram DMs",
@@ -234,11 +227,18 @@ const difficultyConfig = {
  
      setIsConnecting(true);
      try {
+      // Auto-generate verify_token for Facebook (transparent to user)
+      const finalCreds = { ...credentials };
+      if (selectedPlatform.id === "facebook" && !finalCreds.verify_token) {
+        finalCreds.verify_token = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+      }
+
       const result = await connectChannel.mutateAsync({
-         chatbotId,
-         platform: selectedPlatform.id,
-         credentials,
-       });
+        chatbotId,
+        platform: selectedPlatform.id,
+        credentials: finalCreds,
+      });
+
  
       // Check if there are setup instructions to show (for Meta platforms)
       const setupData = (result as any).setupResult;
@@ -596,121 +596,44 @@ const difficultyConfig = {
               </div>
             </div>
           ) : (
-          <div className="space-y-4 py-4">
-            {/* Step-by-step guide */}
-            <Accordion type="single" collapsible defaultValue="steps">
-              <AccordionItem value="steps" className="border rounded-lg px-3">
-                <AccordionTrigger className="text-sm font-medium hover:no-underline">
-                  <span className="flex items-center gap-2">
-                    <HelpCircle className="w-4 h-4 text-primary" />
-                    Step-by-step setup guide
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ol className="space-y-2 text-sm">
-                    {selectedPlatform?.steps.map((step, index) => (
-                      <li 
-                        key={index} 
-                        className={`flex items-start gap-2 p-2 rounded-lg transition-colors ${
-                          currentStep === index ? "bg-primary/10" : ""
-                        }`}
-                      >
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium shrink-0 ${
-                          currentStep > index 
-                            ? "bg-green-500 text-white" 
-                            : currentStep === index 
-                              ? "bg-primary text-primary-foreground" 
-                              : "bg-muted text-muted-foreground"
-                        }`}>
-                          {currentStep > index ? <Check className="w-3 h-3" /> : index + 1}
-                        </span>
-                        <span className="text-muted-foreground">{step}</span>
-                      </li>
-                    ))}
-                  </ol>
-                  <a
-                    href={selectedPlatform?.docsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-primary hover:underline mt-3"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    Official documentation
-                  </a>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            {/* Credential fields */}
-            <div className="space-y-4 pt-2">
-              <p className="text-sm font-medium">Enter your credentials:</p>
-             {selectedPlatform?.fields.map((field) => (
-              <div key={field.key} className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor={field.key}>{field.label}</Label>
-                  {credentials[field.key]?.trim() && (
-                    <Check className="w-4 h-4 text-green-500" />
-                  )}
+          <div className="space-y-4 py-2">
+            {/* Simple credential fields */}
+            <div className="space-y-3">
+              {selectedPlatform?.fields.map((field) => (
+                <div key={field.key} className="space-y-1.5">
+                  <Label htmlFor={field.key} className="text-sm">
+                    {field.label}
+                  </Label>
+                  <Input
+                    id={field.key}
+                    type={field.type || "text"}
+                    placeholder={field.placeholder}
+                    value={credentials[field.key] || ""}
+                    onChange={(e) =>
+                      setCredentials({ ...credentials, [field.key]: e.target.value })
+                    }
+                    className="font-mono text-sm"
+                    autoComplete="off"
+                  />
+                  <p className="text-xs text-muted-foreground">{field.help}</p>
                 </div>
-                 <Input
-                   id={field.key}
-                   type={field.type || "text"}
-                   placeholder={field.placeholder}
-                   value={credentials[field.key] || ""}
-                  onChange={(e) => {
-                    setCredentials({ ...credentials, [field.key]: e.target.value });
-                    // Update step based on filled fields
-                    const filledCount = Object.values({ ...credentials, [field.key]: e.target.value })
-                      .filter(v => v?.trim()).length;
-                    setCurrentStep(Math.min(filledCount + (selectedPlatform?.steps.length || 1) - selectedPlatform!.fields.length, (selectedPlatform?.steps.length || 1) - 1));
-                  }}
-                  className="font-mono text-sm"
-                 />
-                <p className="text-xs text-muted-foreground flex items-start gap-1">
-                  <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
-                  {field.help}
-                </p>
-               </div>
-             ))}
+              ))}
             </div>
- 
-            {/* Webhook info - collapsible for advanced users */}
-            {(selectedPlatform?.id === "facebook" || selectedPlatform?.id === "instagram" || selectedPlatform?.id === "whatsapp") && (
-              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-200 space-y-2">
-                <button 
-                  onClick={() => setShowWebhookHelp(!showWebhookHelp)}
-                  className="flex items-center justify-between w-full text-left"
-                >
-                  <p className="text-xs font-medium text-amber-700">⚠️ Important: Webhook Setup Required</p>
-                  <ChevronRight className={`w-4 h-4 text-amber-600 transition-transform ${showWebhookHelp ? "rotate-90" : ""}`} />
-                </button>
-                {showWebhookHelp && (
-                  <div className="space-y-2 pt-2">
-                    <p className="text-xs text-amber-700">
-                      After connecting, you'll need to add this webhook URL to your {selectedPlatform?.name} settings:
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 text-[10px] bg-background p-2 rounded break-all">
-                        {webhookUrl}?platform={selectedPlatform?.id}&token=[shown after connect]
-                      </code>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 shrink-0"
-                        onClick={() => {
-                          navigator.clipboard.writeText(`${webhookUrl}?platform=${selectedPlatform?.id}&token=YOUR_TOKEN`);
-                          toast({ title: "Copied!", description: "Webhook URL copied" });
-                        }}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-           </div>
+
+            {/* Single "how to get this" link */}
+            <a
+              href={selectedPlatform?.docsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              How do I get {selectedPlatform?.fields.length === 1 ? "this" : "these"}?
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
           )}
+
  
            {!setupResult && (
             <div className="flex gap-3">
