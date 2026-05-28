@@ -227,11 +227,18 @@ const difficultyConfig = {
  
      setIsConnecting(true);
      try {
+      // Auto-generate verify_token for Facebook (transparent to user)
+      const finalCreds = { ...credentials };
+      if (selectedPlatform.id === "facebook" && !finalCreds.verify_token) {
+        finalCreds.verify_token = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+      }
+
       const result = await connectChannel.mutateAsync({
-         chatbotId,
-         platform: selectedPlatform.id,
-         credentials,
-       });
+        chatbotId,
+        platform: selectedPlatform.id,
+        credentials: finalCreds,
+      });
+
  
       // Check if there are setup instructions to show (for Meta platforms)
       const setupData = (result as any).setupResult;
