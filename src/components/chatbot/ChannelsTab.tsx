@@ -116,30 +116,23 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
     bgColor: "bg-blue-500/10",
     description: "Auto-reply to your Facebook Page messages",
     difficulty: "medium",
-    setupTime: "10 min",
+    setupTime: "5 min",
     fields: [
       { 
         key: "page_access_token", 
         label: "Page Access Token", 
         placeholder: "EAA...",
-        help: "Get this from your Facebook Page Settings → Advanced Messaging"
-      },
-      { 
-        key: "verify_token", 
-        label: "Verify Token", 
-        placeholder: "any-secret-word-you-choose",
-        help: "Make up any secret word (e.g., 'mybot123'). You'll use this same word in Facebook's webhook settings"
+        help: "Facebook Page Settings → Advanced Messaging → Access Tokens"
       },
     ],
     docsUrl: "https://developers.facebook.com/docs/messenger-platform/getting-started",
     steps: [
-      "Go to Facebook Developers → Create or select your app",
-      "Add the 'Messenger' product to your app",
-      "Generate a Page Access Token for your Facebook Page",
-      "Create any verify token (a secret word you'll remember)",
-      "Paste both values below, then set up the webhook in Facebook"
+      "Open your Facebook Page → Settings → Advanced Messaging",
+      "Generate a Page Access Token and copy it",
+      "Paste it below and click Connect"
     ],
   },
+
   {
     id: "instagram",
     name: "Instagram DMs",
